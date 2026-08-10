@@ -1,0 +1,29 @@
+{
+  "mode": {
+    "1": "cascade_pd_tracking"
+  },
+  "outer": {
+    "1": "follow_main"
+  },
+  "mix": {
+    "1": "inner_wheel_pd"
+  },
+  "lidar": {
+    "1": "lidar_disabled"
+  },
+  "curve": {
+    "1": "sharp",
+    "2": "straight"
+  },
+  "avoidance": {},
+  "intent": {
+    "1": "FOLLOW_MAIN"
+  },
+  "trajectory": {
+    "1": "COMMITTED"
+  },
+  "planner": {
+    "1": "UNKNOWN",
+    "2": "HOLD"
+  }
+}

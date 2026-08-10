@@ -1,0 +1,46 @@
+[
+  {
+    "timestamp_ms": 1000,
+    "objects": [
+      {
+        "id": "main_lane",
+        "label": 6,
+        "class_name": "main-lane",
+        "confidence": 0.9,
+        "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0]]
+      }
+    ]
+  },
+  {
+    "timestamp_ms": 1033,
+    "objects": []
+  },
+  {
+    "timestamp_ms": 1066,
+    "objects": []
+  },
+  {
+    "timestamp_ms": 1100,
+    "objects": []
+  },
+  {
+    "timestamp_ms": 1133,
+    "objects": []
+  },
+  {
+    "timestamp_ms": 1166,
+    "objects": []
+  },
+  {
+    "timestamp_ms": 1200,
+    "objects": [
+      {
+        "id": "main_lane",
+        "label": 6,
+        "class_name": "main-lane",
+        "confidence": 0.9,
+        "waypoints": [[10.0, 0.0], [10.0, 1000.0], [10.0, 2000.0]]
+      }
+    ]
+  }
+]

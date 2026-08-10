@@ -1,0 +1,117 @@
+pd_backsteping_cmdvel_node:
+  ros__parameters:
+    control_error_topic: "/avs/control_error"
+    cmd_vel_topic: "/cmd_vel"
+    state_topic: "/avs/pd_backsteping_state"
+    scan_topic: "/scan"
+    odom_topic: "/odom_raw"
+
+    control_hz: 50.0
+
+    fresh_s: 1.8
+    blind_hold_s: 3.0
+    lost_stop_s: 6.0
+
+    startup_straight_s: 1.0
+    startup_v: 0.045
+
+    fps_init: 2.0
+    fps_min: 0.8
+    fps_max: 20.0
+    fps_tau_s: 1.0
+    target_distance_per_frame_m: 0.033
+
+    v_max: 0.115
+    v_min: 0.050
+    v_slow: 0.040
+    v_blind: 0.048
+    v_curve_max: 0.052
+    v_recover_max: 0.070
+
+    omega_abs_max: 0.58
+    omega_center_max: 0.000
+    omega_near_max: 0.025
+    omega_mid_max: 0.160
+    omega_curve_max: 0.440
+    min_turn_radius_m: 0.150
+
+    x_deadband_m: 0.035
+    theta_deadband_rad: 0.050
+    center_x_m: 0.060
+    center_theta_rad: 0.110
+    near_x_m: 0.090
+    near_theta_rad: 0.180
+
+    curve_enter_x_m: 0.110
+    curve_enter_theta_rad: 0.240
+    curve_enter_curvature: 1.25
+    curve_confirm_frames: 2
+    curve_release_frames: 3
+
+    x_bias_m: 0.0
+    epsilon_sign: 1.0
+    theta_sign: 1.0
+    steering_sign: 1.0
+    invert_angular: false
+
+    max_abs_e_y_m: 0.45
+    max_abs_theta_rad: 1.10
+    control_clip_e_y_m: 0.18
+    control_clip_theta_rad: 0.42
+
+    branch_guard_enable: true
+    branch_jump_e_y_m: 0.18
+    branch_jump_theta_rad: 0.45
+    branch_extreme_e_y_m: 0.32
+    branch_extreme_theta_rad: 0.80
+    branch_hold_s: 0.90
+    branch_hold_v: 0.050
+
+    median_window: 5
+    error_filter_tau_s: 0.75
+    derivative_filter_tau_s: 1.00
+
+    lookahead_default_m: 0.42
+    lookahead_min_m: 0.26
+    lookahead_max_m: 0.85
+
+    k_pp: 0.82
+    k_y: 0.50
+    k_dy: 0.000
+    k_theta: 0.24
+    k_dtheta: 0.000
+    lambda_y: 0.95
+
+    k_slow_y: 1.70
+    k_slow_theta: 1.10
+    k_slow_curvature: 0.140
+
+    v_ref_rate_up: 0.14
+    v_ref_rate_down: 0.38
+    omega_ref_rate_center: 0.18
+    omega_ref_rate_mid: 0.55
+    omega_ref_rate_curve: 0.95
+
+    enable_calibration: true
+    linear_cmd_scale: 1.245
+    angular_cmd_scale: 0.88
+
+    track_width_m: 0.135
+    wheel_radius_m: 0.0225
+    allow_pivot_turn: false
+    inner_wheel_min_fraction: 0.24
+
+    enable_lidar_safety: true
+    emergency_distance: 0.12
+    stop_distance: 0.18
+    slow_distance: 0.38
+    front_angle_deg: 16.0
+
+    enable_cmd: false
+
+    check_cmd_vel_conflict: true
+    allow_cmd_vel_conflict: false
+    publish_zero_on_conflict: true
+
+    stop_burst_count: 45
+    stop_burst_dt: 0.025

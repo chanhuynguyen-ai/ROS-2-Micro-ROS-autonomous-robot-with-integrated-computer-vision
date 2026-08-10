@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVS AI Autonomous Vision System</title>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js (Local for offline speed) -->
+    <script src="chart.js"></script>
+</head>
+<body>
+    <div class="glass-bg"></div>
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="pulse-indicator active"></span>
+                <h1>AI Autonomous Vision System</h1>
+                <span class="badge">CPU-Centric NCNN</span>
+            </div>
+            <div class="system-status">
+                <span class="status-label">SYSTEM STATUS:</span>
+                <span id="sys-status" class="status-value success">ONLINE</span>
+            </div>
+        </header>
+
+        <!-- MAIN DASHBOARD GRID -->
+        <main class="dashboard-grid">
+            
+            <!-- LEFT PANEL: STREAM VIEW -->
+            <section class="panel main-stream-panel">
+                <div class="panel-header">
+                    <h2><span class="icon">📹</span> Live Perception Stream</h2>
+                    <div class="header-controls">
+
+                        <div class="stream-badge" id="stream-active-badge">
+                            <span class="badge-dot"></span>
+                            <span class="badge-text">LIVE</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stream-container">
+                    <img id="mjpeg-stream" src="/api/stream" alt="Live perception stream offline" />
+                    <div class="stream-overlay" id="stream-loader">
+                        <div class="spinner"></div>
+                        <p>Awaiting video stream from ROS2...</p>
+                    </div>
+                </div>
+                <div class="stream-footer">
+                    <div class="source-info">
+                        <span class="label">ACTIVE SOURCE:</span>
+                        <span id="active-source-display" class="value">video_test1.mp4</span>
+                    </div>
+                    <div class="resolution-info">
+                        <span class="label">TOPIC:</span>
+                        <span class="value">/camera/image_raw/compressed</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: METRICS & CONTROLS -->
+            <div class="side-panel-group">
+                
+                <!-- PERFORMANCE METRICS -->
+                <section class="panel metrics-panel">
+                    <div class="panel-header">
+                        <h2><span class="icon">📊</span> Telemetry & Performance</h2>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-card primary">
+                            <span class="metric-title">Processing FPS</span>
+                            <span class="metric-value" id="val-fps">0.0 <span class="unit">FPS</span></span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Inference Latency</span>
+                            <span class="metric-value" id="val-inf-latency">0.0 <span class="unit">ms</span></span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">End-to-End Age</span>
+                            <span class="metric-value" id="val-output-age">0.0 <span class="unit">ms</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="submetrics-grid">
+                        <div class="submetric-card">
+                            <span class="submetric-title">Camera Input Rate</span>
+                            <span class="submetric-value" id="val-input-fps">0.0 FPS</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">DDS Publish Rate</span>
+                            <span class="submetric-value" id="val-publish-fps">0.0 FPS</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">Ingress Delay</span>
+                            <span class="submetric-value" id="val-input-age">0.0 ms</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">CV Bridge translation</span>
+                            <span class="submetric-value" id="val-bridge-latency">0.0 ms</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">Post-Processing</span>
+                            <span class="submetric-value" id="val-post-latency">0.0 ms</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">Contour Extraction</span>
+                            <span class="submetric-value" id="val-contour-time">0.0 ms</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">JSON Serialization</span>
+                            <span class="submetric-value" id="val-json-latency">0.0 ms</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">DDS Publish overhead</span>
+                            <span class="submetric-value" id="val-publish-latency">0.0 ms</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">Local Processing Latency</span>
+                            <span class="submetric-value" id="val-proc-latency">0.0 ms</span>
+                        </div>
+                        <div class="submetric-card">
+                            <span class="submetric-title">Total Local Node Latency</span>
+                            <span class="submetric-value" id="val-node-total-latency">0.0 ms</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- BIRD'S EYE VIEW PANEL -->
+                <section class="panel bev-panel">
+                    <div class="panel-header">
+                        <h2><span class="icon">🗺️</span> Real-World Bird's Eye View</h2>
+                        <span class="badge idle" id="bev-status">NOT CALIBRATED</span>
+                    </div>
+                    <div class="bev-container" style="display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                        <canvas id="bev-canvas" width="280" height="350"></canvas>
+                    </div>
+                    <div class="bev-footer" style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; font-weight: 600;">
+                        <span>Grid interval: 500 mm</span>
+                        <span>Vehicle at bottom center</span>
+                    </div>
+                </section>
+
+                <!-- ROUTE INTENT CONTROL PANEL -->
+                <section class="panel route-intent-panel">
+                    <div class="panel-header">
+                        <h2><span class="icon">🗺️</span> Route Intent</h2>
+                        <span id="intent-status-badge" class="badge success">FOLLOW MAIN</span>
+                    </div>
+                    <div class="route-intent-body">
+                        <div class="system-arm-row">
+                            <span class="arm-label">Safety Arming:</span>
+                            <div class="arm-btn-group">
+                                <button id="btn-arm" class="btn btn-arm-compact" onclick="sendArmCmd('arm')">🟢 ARM</button>
+                                <button id="btn-disarm" class="btn btn-disarm-compact active" onclick="sendArmCmd('disarm')">🔴 DISARMED</button>
+                            </div>
+                        </div>
+                        <div class="intent-info-grid">
+                            <div class="intent-info-row">
+                                <span class="info-label">Requested Intent:</span>
+                                <span id="requested-intent-display" class="info-value">follow_main</span>
+                            </div>
+                            <div class="intent-info-row">
+                                <span class="info-label">Decision State:</span>
+                                <span id="decision-state-display" class="info-value">FOLLOW_MAIN</span>
+                            </div>
+                            <div class="intent-info-row" id="blocked-reason-container" style="display: none;">
+                                <span class="info-label text-warning">Blocked/Waiting:</span>
+                                <span id="blocked-reason-display" class="info-value text-warning">None</span>
+                            </div>
+                        </div>
+                        <div class="intent-button-grid">
+                            <!-- Row 1: Follow Main -->
+                            <div class="button-row row-full">
+                                <button id="btn-intent-follow-main" class="btn btn-intent active" onclick="sendRouteIntent('follow_main')">
+                                    <span class="btn-icon">🛣️</span> Follow Main
+                                </button>
+                            </div>
+                            <!-- Row 2: Turn Left & Turn Right -->
+                            <div class="button-row row-half">
+                                <button id="btn-intent-turn-left" class="btn btn-intent" onclick="sendRouteIntent('turn_left')">
+                                    <span class="btn-icon">👈</span> Turn Left
+                                </button>
+                                <button id="btn-intent-turn-right" class="btn btn-intent" onclick="sendRouteIntent('turn_right')">
+                                    <span class="btn-icon">👉</span> Turn Right
+                                </button>
+                            </div>
+                            <!-- Row 3: Lane Change Left & Lane Change Right -->
+                            <div class="button-row row-half">
+                                <button id="btn-intent-lane-change-left" class="btn btn-intent" onclick="sendRouteIntent('lane_change_left')">
+                                    <span class="btn-icon">⬅️</span> Lane Change Left
+                                </button>
+                                <button id="btn-intent-lane-change-right" class="btn btn-intent" onclick="sendRouteIntent('lane_change_right')">
+                                    <span class="btn-icon">➡️</span> Lane Change Right
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CONTROL PANEL -->
+                <section class="panel control-panel">
+                    <div class="panel-header">
+                        <h2><span class="icon">⚙️</span> Control & Reconfigure</h2>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="control-label-row">
+                            <label for="slider-prob">Probability Threshold</label>
+                            <span class="control-value-badge" id="val-prob">0.25</span>
+                        </div>
+                        <input type="range" id="slider-prob" min="0.05" max="0.95" step="0.05" value="0.25" class="custom-slider">
+                        <span class="slider-hint">Minimum confidence level required for detections.</span>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label-row">
+                            <label for="slider-nms">NMS Threshold</label>
+                            <span class="control-value-badge" id="val-nms">0.45</span>
+                        </div>
+                        <input type="range" id="slider-nms" min="0.1" max="0.9" step="0.05" value="0.45" class="custom-slider">
+                        <span class="slider-hint">Non-Maximum Suppression overlap threshold.</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="select-mode">Run Mode</label>
+                        <select id="select-mode" class="custom-select">
+                            <option value="camera">Real-time USB Camera</option>
+                            <option value="video">Simulation Video</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group" id="video-source-group">
+                        <label for="select-video">Change Video Source</label>
+                        <select id="select-video" class="custom-select">
+                            <option value="video_test1.mp4" selected>video_test1.mp4</option>
+                            <option value="video_test2.mp4">video_test2.mp4</option>
+                            <option value="video_test3.mp4">video_test3.mp4</option>
+                            <option value="video_test4.mp4">video_test4.mp4</option>
+                            <option value="video_test5.mp4">video_test5.mp4</option>
+                            <option value="video_test6.mp4">video_test6.mp4</option>
+                            <option value="video_test7.mp4">video_test7.mp4</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group" style="display: flex; gap: 10px;">
+                        <button id="btn-apply" class="btn primary" style="flex: 2;">Apply Settings</button>
+                        <button id="btn-calibrate" class="btn secondary" style="flex: 1; background: rgba(138, 75, 243, 0.15); border: 1px solid var(--border-hover); color: var(--text-primary); font-weight: 700;">Calibrate</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- CHARTS & DETECTIONS -->
+        <div class="bottom-grid">
+            <!-- REAL-TIME CHARTS -->
+            <section class="panel chart-panel">
+                <div class="panel-header">
+                    <h2><span class="icon">📈</span> Live Performance History</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="performance-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- DETECTION STATISTICS -->
+            <section class="panel detections-panel">
+                <div class="panel-header">
+                    <h2><span class="icon">🔍</span> Detected Objects</h2>
+                </div>
+                <div class="detections-container">
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot ego-lane"></span>Main Lane (Ego)</span>
+                        <span class="detection-count" id="count-main-lane">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot other-lane"></span>Adjacent Lanes</span>
+                        <span class="detection-count" id="count-other-lane">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot vehicle"></span>Vehicles</span>
+                        <span class="detection-count" id="count-vehicle">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot solid-white"></span>Solid White Lane</span>
+                        <span class="detection-count" id="count-solid-white">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot solid-yellow"></span>Solid Yellow Lane</span>
+                        <span class="detection-count" id="count-solid-yellow">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot dashed-white"></span>Dashed White Lane</span>
+                        <span class="detection-count" id="count-dashed-white">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot dashed-yellow"></span>Dashed Yellow Lane</span>
+                        <span class="detection-count" id="count-dashed-yellow">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot double-solid-white"></span>Double Solid White</span>
+                        <span class="detection-count" id="count-double-solid-white">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot parking-zone"></span>Parking Zone</span>
+                        <span class="detection-count" id="count-parking-zone">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot start"></span>Start Line</span>
+                        <span class="detection-count" id="count-start">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot stop-line"></span>Stop Line</span>
+                        <span class="detection-count" id="count-stop-line">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot turn-lane"></span>Turn Lane</span>
+                        <span class="detection-count" id="count-turn-lane">0</span>
+                    </div>
+                    <!-- Traffic Signs (New Classes) -->
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot sign-no-left"></span>Sign No Left</span>
+                        <span class="detection-count" id="count-sign-no-left">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot sign-no-parking"></span>Sign No Parking</span>
+                        <span class="detection-count" id="count-sign-no-parking">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot sign-no-right"></span>Sign No Right</span>
+                        <span class="detection-count" id="count-sign-no-right">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot sign-parking"></span>Sign Parking</span>
+                        <span class="detection-count" id="count-sign-parking">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot sign-stop"></span>Sign Stop</span>
+                        <span class="detection-count" id="count-sign-stop">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot sign-turn-left"></span>Sign Turn Left</span>
+                        <span class="detection-count" id="count-sign-turn-left">0</span>
+                    </div>
+                    <div class="detection-row">
+                        <span class="detection-class"><span class="class-dot sign-turn-right"></span>Sign Turn Right</span>
+                        <span class="detection-count" id="count-sign-turn-right">0</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- CALIBRATION MODAL -->
+    <div id="calibration-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2><span class="icon">📐</span> Homography Calibration</h2>
+                <button id="btn-close-calibration" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="calibration-workspace">
+                    <div class="calibration-image-container">
+                        <img id="calibration-img" src="" alt="Calibration Frame" />
+                        <canvas id="calibration-canvas" width="640" height="480"></canvas>
+                    </div>
+                    <div class="calibration-hint">
+                        <p>Click exactly 4 points on the image in <strong>clockwise order starting from Top-Left</strong>:</p>
+                        <ol>
+                            <li><span class="point-badge p1">1</span> Top-Left (Far Left)</li>
+                            <li><span class="point-badge p2">2</span> Top-Right (Far Right)</li>
+                            <li><span class="point-badge p3">3</span> Bottom-Right (Near Right)</li>
+                            <li><span class="point-badge p4">4</span> Bottom-Left (Near Left)</li>
+                        </ol>
+                        <p class="coords-note">Note: Origin (0,0) is center of vehicle bumper. Y is forward, X is right.</p>
+                    </div>
+                </div>
+                <div class="calibration-sidebar">
+                    <h3>Real-world Coordinates (mm)</h3>
+                    <div class="points-inputs">
+                        <div class="point-input-group" id="group-p1">
+                            <span class="point-num p1">1</span>
+                            <div class="input-row">
+                                <label>X: <input type="number" id="p1-x" value="-150" step="10"></label>
+                                <label>Y: <input type="number" id="p1-y" value="1000" step="10"></label>
+                            </div>
+                        </div>
+                        <div class="point-input-group" id="group-p2">
+                            <span class="point-num p2">2</span>
+                            <div class="input-row">
+                                <label>X: <input type="number" id="p2-x" value="150" step="10"></label>
+                                <label>Y: <input type="number" id="p2-y" value="1000" step="10"></label>
+                            </div>
+                        </div>
+                        <div class="point-input-group" id="group-p3">
+                            <span class="point-num p3">3</span>
+                            <div class="input-row">
+                                <label>X: <input type="number" id="p3-x" value="150" step="10"></label>
+                                <label>Y: <input type="number" id="p3-y" value="500" step="10"></label>
+                            </div>
+                        </div>
+                        <div class="point-input-group" id="group-p4">
+                            <span class="point-num p4">4</span>
+                            <div class="input-row">
+                                <label>X: <input type="number" id="p4-x" value="-150" step="10"></label>
+                                <label>Y: <input type="number" id="p4-y" value="500" step="10"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sidebar-buttons">
+                        <button id="btn-save-calibration" class="btn primary">Save Calibration</button>
+                        <button id="btn-clear-calibration" class="btn secondary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);">Clear Points</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=1.1"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+[
+  {
+    "timestamp_ms": 1000,
+    "objects": [
+      {
+        "id": "main_lane",
+        "label": 6,
+        "class_name": "main-lane",
+        "confidence": 0.9,
+        "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0], [0.0, 4000.0]]
+      },
+      {
+        "id": "other_lane",
+        "label": 7,
+        "class_name": "other-lane",
+        "confidence": 0.85,
+        "waypoints": [[-800.0, 0.0], [-800.0, 1000.0], [-800.0, 2000.0], [-800.0, 3000.0], [-800.0, 4000.0]]
+      },
+      {
+        "id": "dashed_marking",
+        "label": 0,
+        "class_name": "dashed-white",
+        "confidence": 1.0,
+        "waypoints": [[-400.0, 0.0], [-400.0, 1000.0], [-400.0, 2000.0], [-400.0, 3000.0], [-400.0, 4000.0]]
+      }
+    ]
+  }
+]

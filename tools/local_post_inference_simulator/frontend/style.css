@@ -1,0 +1,261 @@
+:root {
+  --bg: #14161a;
+  --panel-bg: #1b1e24;
+  --box-bg: #21242b;
+  --border: #333844;
+  --text: #e4e6eb;
+  --text-dim: #9aa1ac;
+  --accent: #4da6ff;
+  --danger: #ff5d5d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar h1 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.topbar-hint {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 10px;
+  padding: 10px;
+  align-items: start;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.box {
+  background: var(--box-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.box h2 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+label input[type="checkbox"] {
+  display: inline;
+}
+
+input[type="checkbox"] + label,
+label:has(input[type="checkbox"]) {
+  flex-direction: row;
+  align-items: center;
+}
+
+input, select, button {
+  font-family: inherit;
+  font-size: 12px;
+  background: #12151a;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 5px 6px;
+}
+
+button {
+  cursor: pointer;
+  background: #262b34;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.row label {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+.hint {
+  color: var(--text-dim);
+  font-size: 11px;
+  margin: 4px 0 0 0;
+}
+
+.frame-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.frame-chip {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.frame-chip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.canvas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.draw-status {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.canvas-wrap {
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: inline-block;
+  overflow: auto;
+  max-width: 100%;
+}
+
+#scene-canvas {
+  display: block;
+  cursor: crosshair;
+  max-width: 100%;
+}
+
+.object-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.object-table th, .object-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 4px 6px;
+  text-align: left;
+}
+
+.object-table tr.selected {
+  background: #2a3140;
+}
+
+.status-box {
+  background: #0e1013;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px;
+  max-height: 160px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.output-json {
+  max-height: 320px;
+}
+
+.preview-image {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #000;
+  min-height: 80px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.legend-candidate {
+  background: #ff9900;
+}
+
+.legend-normalized {
+  background: #dc00ff;
+}
+
+.legend-committed {
+  background: #00ff00;
+}
+
+.object-table td[data-editable] {
+  cursor: text;
+}
+
+.object-table td[data-editable]:hover {
+  outline: 1px dashed var(--accent);
+}
+
+.frame-chip.running {
+  border-color: var(--danger);
+  color: var(--danger);
+}

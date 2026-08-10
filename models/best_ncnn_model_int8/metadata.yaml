@@ -1,0 +1,40 @@
+description: Ultralytics YOLO26n-seg model trained on /kaggle/working/data.yaml
+author: Ultralytics
+date: '2026-07-28T21:26:16.031714'
+version: 8.4.60
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: segment
+batch: 1
+imgsz:
+- 320
+- 320
+names:
+  0: dashed-white
+  1: dashed-yellow
+  2: double-solid-white
+  3: light_green
+  4: light_red
+  5: light_yellow
+  6: main-lane
+  7: other-lane
+  8: parking-zone
+  9: sign-no-left
+  10: sign-no-parking
+  11: sign-no-right
+  12: sign-parking
+  13: sign-stop
+  14: sign-turn-left
+  15: sign-turn-right
+  16: solid-white
+  17: solid-yellow
+  18: start
+  19: stop-line
+  20: turn-lane
+  21: vehicle
+args:
+  batch: 1
+  half: false
+channels: 3
+end2end: false

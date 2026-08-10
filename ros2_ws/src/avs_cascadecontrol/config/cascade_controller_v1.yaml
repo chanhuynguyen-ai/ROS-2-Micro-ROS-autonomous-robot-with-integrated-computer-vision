@@ -1,0 +1,152 @@
+cascade_controller_v1:
+  ros__parameters:
+    control_error_topic: "/avs/control_error"
+    lane_state_topic: "/avs/lane_state"
+    odom_topic: "/odom_raw"
+    scan_topic: "/scan"
+    cmd_vel_topic: "/cmd_vel"
+
+    ref_topic: "/avs/cascade_controller_v1_ref"
+    state_topic: "/avs/cascade_controller_v1_state"
+
+    runtime_enable_topic: "/avs/cascade_enable_cmd"
+    emergency_stop_topic: "/avs/cascade_emergency_stop"
+
+    enable_cmd: false
+    control_hz: 50.0
+    error_timeout_s: 1.35
+    blind_hold_s: 0.45
+    startup_straight_s: 0.25
+    startup_v: 0.045
+
+    fps_init: 3.0
+    fps_min: 0.8
+    fps_max: 25.0
+    fps_tau_s: 1.0
+    target_distance_per_frame_m: 0.040
+
+    v_max: 0.140
+    v_center: 0.115
+    v_min: 0.040
+    v_curve_max: 0.078
+    v_lane_change_max: 0.065
+    v_recover_max: 0.090
+    v_large_error: 0.040
+    v_blind: 0.035
+    v_jump_hold: 0.032
+
+    track_width_m: 0.135
+    wheel_radius_m: 0.0225
+
+    epsilon_sign: 1.0
+    theta_sign: 1.0
+    theta_control_sign: -1.0
+    invert_angular: false
+    x_bias_m: 0.0
+
+    median_window: 7
+    error_filter_tau_s: 0.58
+    derivative_filter_tau_s: 1.15
+
+    x_deadband_m: 0.016
+    theta_deadband_rad: 0.028
+
+    center_x_m: 0.045
+    center_theta_rad: 0.080
+    near_x_m: 0.085
+    near_theta_rad: 0.170
+    large_error_x_m: 0.240
+    large_error_theta_rad: 0.800
+
+    curve_enter_x_m: 0.110
+    curve_enter_theta_rad: 0.230
+    curve_enter_kappa: 1.20
+    curve_confirm_frames: 3
+    curve_release_frames: 7
+
+    max_abs_x_m: 0.60
+    max_abs_theta_rad: 1.50
+    min_valid_lookahead_m: 0.16
+
+    jump_guard_enable: true
+    jump_x_m: 0.320
+    jump_theta_rad: 0.820
+    jump_hold_s: 0.16
+
+    soft_replan_enable: true
+    soft_replan_step_x_m: 0.060
+    soft_replan_step_theta_rad: 0.160
+    soft_replan_hold_s: 0.45
+    soft_replan_v_max: 0.052
+    soft_replan_omega_max: 0.200
+
+    k_pp_near: 0.08
+    k_lat_near: 0.16
+    k_theta_near: 0.08
+
+    k_pp_mid: 0.58
+    k_lat_mid: 0.52
+    k_theta_mid: 0.20
+
+    k_pp_curve: 1.05
+    k_lat_curve: 0.72
+    k_theta_curve: 0.28
+
+    k_pp_large: 0.18
+    k_lat_large: 0.34
+    k_theta_large: 0.16
+
+    kd_lat: 0.002
+    kd_theta: 0.003
+
+    k_slow_x: 0.90
+    k_slow_theta: 0.65
+    k_slow_kappa: 0.040
+
+    omega_center_max: 0.000
+    omega_near_max: 0.025
+    omega_mid_max: 0.220
+    omega_curve_max: 0.480
+    omega_lane_change_max: 0.300
+    omega_large_error_max: 0.270
+    omega_abs_max: 0.520
+    omega_deadband: 0.008
+
+    v_rate_up: 0.17
+    v_rate_down: 0.38
+    omega_rate_center: 0.30
+    omega_rate_mid: 0.55
+    omega_rate_curve: 0.78
+
+    ld_min_m: 0.320
+    ld_max_m: 0.90
+    default_lookahead_m: 0.48
+    max_abs_kappa: 2.3
+
+    v_max_cmd: 0.145
+    omega_max_cmd: 0.70
+    wheel_speed_rate: 0.125
+    wheel_speed_decel_rate: 0.280
+    same_direction_inner_fraction: 0.55
+    same_direction_min_inner_mps: 0.028
+    inner_omega_deadband: 0.018
+
+    enable_calibration: true
+    linear_cmd_scale: 1.245
+    angular_cmd_scale: 0.92
+
+    enable_lidar_safety: false
+    enable_obstacle_avoidance: false
+
+    emergency_distance: 0.035
+    stop_distance: 0.100
+    slow_distance: 0.300
+    front_angle_deg: 14.0
+
+    check_cmd_vel_conflict: true
+    allow_cmd_vel_conflict: false
+    publish_zero_on_conflict: true
+
+    stop_burst_count: 45
+    stop_burst_dt: 0.025
+    always_publish_stop_on_exit: true

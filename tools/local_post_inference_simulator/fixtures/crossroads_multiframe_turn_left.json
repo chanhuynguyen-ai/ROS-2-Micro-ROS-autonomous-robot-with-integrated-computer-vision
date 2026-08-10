@@ -1,0 +1,1565 @@
+{
+ "name": "crossroads_multiframe_turn_left",
+ "canvas": {
+  "width": 640,
+  "height": 480
+ },
+ "calibration": {
+  "source": "config/calibration.json"
+ },
+ "route_intent": {
+  "intent": "turn_left",
+  "seq": 1
+ },
+ "assertions": {
+  "expected_selected_lane": "turn-lane_1",
+  "expected_trajectory_kind": "turn_left",
+  "expected_control_source": "trajectory_manager",
+  "expected_blocked_state": false,
+  "max_lane_switch_count": 1,
+  "max_replan_count": 2,
+  "max_invalid_frame_count": 0,
+  "max_jitter_epsilon_x_mm": 5.0,
+  "max_jitter_theta_rad": 0.05
+ },
+ "frames": [
+  {
+   "frame_id": 1,
+   "objects": [
+    {
+     "id": "main-lane_1",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       312,
+       453
+      ],
+      [
+       323,
+       287
+      ],
+      [
+       402,
+       287
+      ],
+      [
+       416,
+       453
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "main-lane_2",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       329,
+       206
+      ],
+      [
+       331,
+       182
+      ],
+      [
+       347,
+       182
+      ],
+      [
+       359,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_1",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       263,
+       438
+      ],
+      [
+       268,
+       384
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_2",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       280,
+       278
+      ],
+      [
+       277,
+       311
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "dashed-yellow_1",
+     "class_name": "dashed-yellow",
+     "label": 1,
+     "shape": "polyline",
+     "points_px": [
+      [
+       275,
+       323
+      ],
+      [
+       269,
+       370
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_1",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       252,
+       281
+      ],
+      [
+       174,
+       278
+      ],
+      [
+       132,
+       440
+      ],
+      [
+       238,
+       439
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_2",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       269,
+       205
+      ],
+      [
+       299,
+       181
+      ],
+      [
+       324,
+       182
+      ],
+      [
+       316,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_3",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       318,
+       205
+      ],
+      [
+       324,
+       182
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_3",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       414,
+       223
+      ],
+      [
+       560,
+       225
+      ],
+      [
+       556,
+       266
+      ],
+      [
+       413,
+       266
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_4",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       416,
+       163
+      ],
+      [
+       555,
+       163
+      ],
+      [
+       556,
+       210
+      ],
+      [
+       413,
+       210
+      ]
+     ],
+     "confidence": 1
+    }
+   ]
+  },
+  {
+   "frame_id": 2,
+   "objects": [
+    {
+     "id": "main-lane_1",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       312,
+       453
+      ],
+      [
+       323,
+       287
+      ],
+      [
+       402,
+       287
+      ],
+      [
+       416,
+       453
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "main-lane_2",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       329,
+       206
+      ],
+      [
+       331,
+       182
+      ],
+      [
+       347,
+       182
+      ],
+      [
+       359,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_1",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       263,
+       438
+      ],
+      [
+       268,
+       384
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_2",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       280,
+       278
+      ],
+      [
+       277,
+       311
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "dashed-yellow_1",
+     "class_name": "dashed-yellow",
+     "label": 1,
+     "shape": "polyline",
+     "points_px": [
+      [
+       275,
+       323
+      ],
+      [
+       269,
+       370
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_1",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       252,
+       281
+      ],
+      [
+       174,
+       278
+      ],
+      [
+       132,
+       440
+      ],
+      [
+       238,
+       439
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_2",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       269,
+       205
+      ],
+      [
+       299,
+       181
+      ],
+      [
+       324,
+       182
+      ],
+      [
+       316,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_3",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       318,
+       205
+      ],
+      [
+       324,
+       182
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_3",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       414,
+       223
+      ],
+      [
+       560,
+       225
+      ],
+      [
+       556,
+       266
+      ],
+      [
+       413,
+       266
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_4",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       416,
+       163
+      ],
+      [
+       555,
+       163
+      ],
+      [
+       556,
+       210
+      ],
+      [
+       413,
+       210
+      ]
+     ],
+     "confidence": 1
+    }
+   ]
+  },
+  {
+   "frame_id": 3,
+   "objects": [
+    {
+     "id": "main-lane_1",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       312,
+       453
+      ],
+      [
+       323,
+       287
+      ],
+      [
+       402,
+       287
+      ],
+      [
+       416,
+       453
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "main-lane_2",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       329,
+       206
+      ],
+      [
+       331,
+       182
+      ],
+      [
+       347,
+       182
+      ],
+      [
+       359,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_1",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       263,
+       438
+      ],
+      [
+       268,
+       384
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_2",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       280,
+       278
+      ],
+      [
+       277,
+       311
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "dashed-yellow_1",
+     "class_name": "dashed-yellow",
+     "label": 1,
+     "shape": "polyline",
+     "points_px": [
+      [
+       275,
+       323
+      ],
+      [
+       269,
+       370
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_1",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       252,
+       281
+      ],
+      [
+       174,
+       278
+      ],
+      [
+       132,
+       440
+      ],
+      [
+       238,
+       439
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_2",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       269,
+       205
+      ],
+      [
+       299,
+       181
+      ],
+      [
+       324,
+       182
+      ],
+      [
+       316,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_3",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       318,
+       205
+      ],
+      [
+       324,
+       182
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_1",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       7,
+       256
+      ],
+      [
+       19,
+       211
+      ],
+      [
+       130,
+       212
+      ],
+      [
+       99,
+       256
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_2",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       151,
+       210
+      ],
+      [
+       9,
+       209
+      ],
+      [
+       9,
+       258
+      ],
+      [
+       146,
+       258
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_3",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       414,
+       223
+      ],
+      [
+       560,
+       225
+      ],
+      [
+       556,
+       266
+      ],
+      [
+       413,
+       266
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_4",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       416,
+       163
+      ],
+      [
+       555,
+       163
+      ],
+      [
+       556,
+       210
+      ],
+      [
+       413,
+       210
+      ]
+     ],
+     "confidence": 1
+    }
+   ]
+  },
+  {
+   "frame_id": 4,
+   "objects": [
+    {
+     "id": "main-lane_1",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       312,
+       453
+      ],
+      [
+       323,
+       287
+      ],
+      [
+       402,
+       287
+      ],
+      [
+       416,
+       453
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "main-lane_2",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       329,
+       206
+      ],
+      [
+       331,
+       182
+      ],
+      [
+       347,
+       182
+      ],
+      [
+       359,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_1",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       263,
+       438
+      ],
+      [
+       268,
+       384
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_2",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       280,
+       278
+      ],
+      [
+       277,
+       311
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "dashed-yellow_1",
+     "class_name": "dashed-yellow",
+     "label": 1,
+     "shape": "polyline",
+     "points_px": [
+      [
+       275,
+       323
+      ],
+      [
+       269,
+       370
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_1",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       252,
+       281
+      ],
+      [
+       174,
+       278
+      ],
+      [
+       132,
+       440
+      ],
+      [
+       238,
+       439
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_2",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       269,
+       205
+      ],
+      [
+       299,
+       181
+      ],
+      [
+       324,
+       182
+      ],
+      [
+       316,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_3",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       318,
+       205
+      ],
+      [
+       324,
+       182
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_1",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       7,
+       256
+      ],
+      [
+       19,
+       211
+      ],
+      [
+       130,
+       212
+      ],
+      [
+       99,
+       256
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_2",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       151,
+       210
+      ],
+      [
+       9,
+       209
+      ],
+      [
+       9,
+       258
+      ],
+      [
+       146,
+       258
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_3",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       414,
+       223
+      ],
+      [
+       560,
+       225
+      ],
+      [
+       556,
+       266
+      ],
+      [
+       413,
+       266
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_4",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       416,
+       163
+      ],
+      [
+       555,
+       163
+      ],
+      [
+       556,
+       210
+      ],
+      [
+       413,
+       210
+      ]
+     ],
+     "confidence": 1
+    }
+   ]
+  },
+  {
+   "frame_id": 5,
+   "objects": [
+    {
+     "id": "main-lane_1",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       312,
+       453
+      ],
+      [
+       323,
+       287
+      ],
+      [
+       402,
+       287
+      ],
+      [
+       416,
+       453
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "main-lane_2",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       329,
+       206
+      ],
+      [
+       331,
+       182
+      ],
+      [
+       347,
+       182
+      ],
+      [
+       359,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_1",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       263,
+       438
+      ],
+      [
+       268,
+       384
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_2",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       280,
+       278
+      ],
+      [
+       277,
+       311
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "dashed-yellow_1",
+     "class_name": "dashed-yellow",
+     "label": 1,
+     "shape": "polyline",
+     "points_px": [
+      [
+       275,
+       323
+      ],
+      [
+       269,
+       370
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_1",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       252,
+       281
+      ],
+      [
+       174,
+       278
+      ],
+      [
+       132,
+       440
+      ],
+      [
+       238,
+       439
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_2",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       269,
+       205
+      ],
+      [
+       299,
+       181
+      ],
+      [
+       324,
+       182
+      ],
+      [
+       316,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_3",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       318,
+       205
+      ],
+      [
+       324,
+       182
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_1",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       7,
+       256
+      ],
+      [
+       19,
+       211
+      ],
+      [
+       130,
+       212
+      ],
+      [
+       99,
+       256
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_2",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       151,
+       210
+      ],
+      [
+       9,
+       209
+      ],
+      [
+       9,
+       258
+      ],
+      [
+       146,
+       258
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_3",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       414,
+       223
+      ],
+      [
+       560,
+       225
+      ],
+      [
+       556,
+       266
+      ],
+      [
+       413,
+       266
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_4",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       416,
+       163
+      ],
+      [
+       555,
+       163
+      ],
+      [
+       556,
+       210
+      ],
+      [
+       413,
+       210
+      ]
+     ],
+     "confidence": 1
+    }
+   ]
+  },
+  {
+   "frame_id": 6,
+   "objects": [
+    {
+     "id": "main-lane_1",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       312,
+       453
+      ],
+      [
+       323,
+       287
+      ],
+      [
+       402,
+       287
+      ],
+      [
+       416,
+       453
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "main-lane_2",
+     "class_name": "main-lane",
+     "label": 6,
+     "shape": "polygon",
+     "points_px": [
+      [
+       329,
+       206
+      ],
+      [
+       331,
+       182
+      ],
+      [
+       347,
+       182
+      ],
+      [
+       359,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_1",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       263,
+       438
+      ],
+      [
+       268,
+       384
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_2",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       280,
+       278
+      ],
+      [
+       277,
+       311
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "dashed-yellow_1",
+     "class_name": "dashed-yellow",
+     "label": 1,
+     "shape": "polyline",
+     "points_px": [
+      [
+       275,
+       323
+      ],
+      [
+       269,
+       370
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_1",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       252,
+       281
+      ],
+      [
+       174,
+       278
+      ],
+      [
+       132,
+       440
+      ],
+      [
+       238,
+       439
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "other-lane_2",
+     "class_name": "other-lane",
+     "label": 7,
+     "shape": "polygon",
+     "points_px": [
+      [
+       269,
+       205
+      ],
+      [
+       299,
+       181
+      ],
+      [
+       324,
+       182
+      ],
+      [
+       316,
+       206
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "solid-yellow_3",
+     "class_name": "solid-yellow",
+     "label": 17,
+     "shape": "polyline",
+     "points_px": [
+      [
+       318,
+       205
+      ],
+      [
+       324,
+       182
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_1",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       7,
+       256
+      ],
+      [
+       19,
+       211
+      ],
+      [
+       130,
+       212
+      ],
+      [
+       99,
+       256
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_2",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       151,
+       210
+      ],
+      [
+       9,
+       209
+      ],
+      [
+       9,
+       258
+      ],
+      [
+       146,
+       258
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_3",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       414,
+       223
+      ],
+      [
+       560,
+       225
+      ],
+      [
+       556,
+       266
+      ],
+      [
+       413,
+       266
+      ]
+     ],
+     "confidence": 1
+    },
+    {
+     "id": "turn-lane_4",
+     "class_name": "turn-lane",
+     "label": 20,
+     "shape": "polygon",
+     "points_px": [
+      [
+       416,
+       163
+      ],
+      [
+       555,
+       163
+      ],
+      [
+       556,
+       210
+      ],
+      [
+       413,
+       210
+      ]
+     ],
+     "confidence": 1
+    }
+   ]
+  }
+ ]
+}

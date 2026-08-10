@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AVS Local Post-Inference Simulator</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="topbar">
+  <h1>AVS Local Post-Inference Simulator</h1>
+  <span class="topbar-hint">Phase 1: canvas scenario editor -&gt; production ROS pipeline (không chạy planner riêng ở đây)</span>
+</header>
+
+<div class="layout">
+
+  <!-- Left column: scenario / class / frame configuration -->
+  <aside class="panel panel-left">
+
+    <section class="box">
+      <h2>Scenario</h2>
+      <label>Name
+        <input id="scenario-name" type="text" value="untitled_scenario" />
+      </label>
+      <div class="row">
+        <label>Width
+          <input id="canvas-width" type="number" min="64" max="4096" value="640" />
+        </label>
+        <label>Height
+          <input id="canvas-height" type="number" min="64" max="4096" value="480" />
+        </label>
+      </div>
+      <label>Calibration source
+        <input id="calibration-source" type="text" value="config/calibration.json" />
+      </label>
+      <div class="row">
+        <button id="btn-new-scenario" title="Xoá scene hiện tại, tạo scenario trống">New</button>
+        <button id="btn-import-scenario" title="Nạp scenario JSON từ file">Import JSON</button>
+        <button id="btn-export-scenario" title="Xuất scenario hiện tại ra file JSON">Export JSON</button>
+        <input id="import-file-input" type="file" accept="application/json" hidden />
+      </div>
+    </section>
+
+    <section class="box">
+      <h2>Route Intent</h2>
+      <label>Intent
+        <select id="route-intent-select"></select>
+      </label>
+      <label>Seq
+        <input id="route-intent-seq" type="number" min="0" value="1" />
+      </label>
+    </section>
+
+    <section class="box">
+      <h2>Class</h2>
+      <label>Class
+        <select id="class-select"></select>
+      </label>
+      <label>Shape
+        <select id="shape-select">
+          <option value="polygon">polygon (lane)</option>
+          <option value="polyline">polyline (marking)</option>
+        </select>
+      </label>
+      <label>Instance id
+        <input id="object-id-input" type="text" placeholder="auto" />
+      </label>
+      <label>Confidence
+        <input id="object-confidence-input" type="number" min="0" max="1" step="0.01" value="1.0" />
+      </label>
+      <div class="row">
+        <button id="btn-draw-start" title="Bắt đầu vẽ shape mới bằng class đã chọn">Draw New Shape</button>
+        <button id="btn-draw-finish" title="Kết thúc shape đang vẽ (hoặc double-click trên canvas)">Finish (Enter)</button>
+        <button id="btn-draw-cancel" title="Huỷ shape đang vẽ (Esc)">Cancel</button>
+      </div>
+      <p class="hint">Polygon: click từng đỉnh, double-click hoặc Enter để đóng shape. Polyline: click từng điểm, Enter để kết thúc.</p>
+    </section>
+
+    <section class="box">
+      <h2>Frames</h2>
+      <div id="frame-list" class="frame-list"></div>
+      <div class="row">
+        <button id="btn-frame-add" title="Nhân bản frame hiện tại thành frame mới">+ Duplicate Frame</button>
+        <button id="btn-frame-delete" title="Xoá frame hiện tại (tối thiểu giữ 1 frame)">Delete Frame</button>
+      </div>
+      <div style="margin-top: 10px;">
+        <label>Frame Route Intent
+          <select id="frame-route-intent-select">
+            <option value="">(Use Global)</option>
+            <option value="follow_main">follow_main</option>
+            <option value="turn_left">turn_left</option>
+            <option value="turn_right">turn_right</option>
+            <option value="lane_change_left">lane_change_left</option>
+            <option value="lane_change_right">lane_change_right</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+  </aside>
+
+  <!-- Modal cho Report -->
+  <div id="report-modal" class="modal" style="display:none; position:fixed; top:10%; left:20%; width:60%; background:#222; border:1px solid #444; padding:20px; z-index:100; box-shadow: 0 0 10px #000;">
+    <h2>Run Report</h2>
+    <div id="report-content" style="white-space: pre-wrap; font-family: monospace; font-size: 14px; color: #ccc; margin-bottom:15px; max-height:400px; overflow-y:auto;"></div>
+    <button id="btn-close-report">Close</button>
+  </div>
+
+  <!-- Center: canvas editor -->
+  <main class="panel panel-center">
+    <div class="canvas-toolbar">
+      <button id="btn-select-mode" title="Chọn/kéo điểm object đã có">Select / Edit</button>
+      <button id="btn-delete-object" title="Xoá object đang chọn (Delete)">Delete Selected</button>
+      <span id="draw-status" class="draw-status">idle</span>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="scene-canvas" width="640" height="480"></canvas>
+    </div>
+    <section class="box">
+      <h2>Objects trong frame hiện tại</h2>
+      <table class="object-table">
+        <thead>
+          <tr><th>Enabled</th><th>Id</th><th>Class</th><th>Shape</th><th>Conf</th><th></th></tr>
+        </thead>
+        <tbody id="object-table-body"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Right column: run controls + backend output -->
+  <aside class="panel panel-right">
+
+    <section class="box">
+      <h2>Run (ROS backend)</h2>
+      <label>Telemetry mode
+        <select id="run-mode-select">
+          <option value="rasterized">rasterized</option>
+          <option value="direct">direct</option>
+        </select>
+      </label>
+      <div class="row">
+        <button id="btn-load-scenario" title="POST /api/scenarios/load">Load Scenario</button>
+      </div>
+      <div class="row">
+        <button id="btn-step-ipm" title="POST /api/scenarios/step_ipm (chỉ IPM, không cần control_node)">Step IPM</button>
+        <button id="btn-step" title="POST /api/scenarios/step (full pipeline)">Step</button>
+      </div>
+      <div class="row">
+        <button id="btn-play" title="POST /api/scenarios/play">Play</button>
+        <button id="btn-pause" title="POST /api/scenarios/pause">Pause</button>
+        <button id="btn-stop" title="POST /api/scenarios/stop">Stop</button>
+        <button id="btn-view-report" title="Xem Run Report của lần Play gần nhất">View Report</button>
+      </div>
+      <pre id="runner-status" class="status-box">no status yet</pre>
+    </section>
+
+    <section class="box">
+      <h2>Preview</h2>
+      <img id="preview-image" class="preview-image" alt="scenario preview" />
+    </section>
+
+    <section class="box">
+      <h2>BEV / World View</h2>
+      <div class="row">
+        <label><input type="checkbox" id="bev-show-slices" /> slices</label>
+        <label><input type="checkbox" id="bev-show-raw" /> raw midpoints</label>
+        <label><input type="checkbox" id="bev-show-filtered" /> filtered midpoints</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="bev-show-candidate" /> <span class="legend-dot legend-candidate"></span> candidate trajectory</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="bev-show-normalized" /> <span class="legend-dot legend-normalized"></span> normalized trajectory</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="bev-show-committed" checked /> <span class="legend-dot legend-committed"></span> committed trajectory</label>
+      </div>
+      <p class="hint">Trajectory overlay đọc trực tiếp <code>debug_trajectories</code> trong <code>/avs/lane_state</code> do <code>control_node</code> thật publish (Phase 5), simulator không tự tính lại planning.</p>
+      <img id="bev-image" class="preview-image" alt="BEV view" />
+    </section>
+
+    <section class="box">
+      <h2>Latest Step / IPM Output</h2>
+      <pre id="output-json" class="status-box output-json">chưa có output</pre>
+    </section>
+
+  </aside>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

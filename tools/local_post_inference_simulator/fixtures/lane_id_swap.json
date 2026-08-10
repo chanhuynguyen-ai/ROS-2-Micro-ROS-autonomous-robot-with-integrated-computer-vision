@@ -1,0 +1,8 @@
+{"name":"lane_id_swap","description":"Main-lane object id changes between frame 3 and 4 (simulating a tracker ID swap) while geometry stays continuous. Selected lane should switch at most once and no spurious replan should occur.","canvas":{"width":640,"height":480},"calibration":{"source":"config/calibration.json"},"route_intent":{"intent":"follow_main","seq":401},"frames":[
+{"frame_id":1,"objects":[{"id":"lis_main_lane_a","class_name":"main-lane","label":6,"shape":"polygon","points_px":[[250,470],[390,470],[360,120],[280,120]],"confidence":1.0}]},
+{"frame_id":2,"objects":[{"id":"lis_main_lane_a","class_name":"main-lane","label":6,"shape":"polygon","points_px":[[248,470],[388,470],[358,120],[278,120]],"confidence":1.0}]},
+{"frame_id":3,"objects":[{"id":"lis_main_lane_a","class_name":"main-lane","label":6,"shape":"polygon","points_px":[[246,470],[386,470],[356,120],[276,120]],"confidence":1.0}]},
+{"frame_id":4,"objects":[{"id":"lis_main_lane_b","class_name":"main-lane","label":6,"shape":"polygon","points_px":[[244,470],[384,470],[354,120],[274,120]],"confidence":1.0}]},
+{"frame_id":5,"objects":[{"id":"lis_main_lane_b","class_name":"main-lane","label":6,"shape":"polygon","points_px":[[242,470],[382,470],[352,120],[272,120]],"confidence":1.0}]},
+{"frame_id":6,"objects":[{"id":"lis_main_lane_b","class_name":"main-lane","label":6,"shape":"polygon","points_px":[[240,470],[380,470],[350,120],[270,120]],"confidence":1.0}]}
+],"assertions":{"max_lane_switch_count":1,"max_jitter_epsilon_x_mm":50.0,"max_jitter_theta_rad":0.1,"expected_blocked_state":false,"expected_trajectory_kind":"follow_main","max_replan_count":1}}

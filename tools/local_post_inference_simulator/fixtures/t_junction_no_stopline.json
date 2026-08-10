@@ -1,0 +1,60 @@
+{
+  "name": "t_junction_no_stopline",
+  "canvas": {"width": 640, "height": 480},
+  "calibration": {"source": "config/calibration.json"},
+  "route_intent": {"intent": "turn_right", "seq": 300},
+  "frames": [
+    {
+      "frame_id": 1,
+      "objects": [
+        {"id": "tjns_main_current", "class_name": "main-lane", "label": 6, "shape": "polygon",
+         "points_px": [[250, 470], [390, 470], [370, 300], [270, 300]], "confidence": 1.0},
+        {"id": "tjns_turn_right", "class_name": "turn-lane", "label": 20, "shape": "polygon",
+         "points_px": [[320, 470], [450, 470], [630, 178], [600, 172], [420, 290]], "confidence": 0.95},
+        {"id": "tjns_turn_left", "class_name": "turn-lane", "label": 20, "shape": "polygon",
+         "points_px": [[320, 470], [190, 470], [10, 178], [40, 172], [220, 290]], "confidence": 0.9}
+      ]
+    },
+    {
+      "frame_id": 2,
+      "objects": [
+        {"id": "tjns_main_current", "class_name": "main-lane", "label": 6, "shape": "polygon",
+         "points_px": [[250, 470], [390, 470], [370, 300], [270, 300]], "confidence": 1.0},
+        {"id": "tjns_turn_right", "class_name": "turn-lane", "label": 20, "shape": "polygon",
+         "points_px": [[320, 470], [450, 470], [630, 178], [600, 172], [420, 290]], "confidence": 0.95},
+        {"id": "tjns_turn_left", "class_name": "turn-lane", "label": 20, "shape": "polygon",
+         "points_px": [[320, 470], [190, 470], [10, 178], [40, 172], [220, 290]], "confidence": 0.9}
+      ]
+    },
+    {
+      "frame_id": 3,
+      "objects": [
+        {"id": "tjns_main_current", "class_name": "main-lane", "label": 6, "shape": "polygon",
+         "points_px": [[250, 470], [390, 470], [370, 300], [270, 300]], "confidence": 1.0},
+        {"id": "tjns_turn_right", "class_name": "turn-lane", "label": 20, "shape": "polygon",
+         "points_px": [[320, 470], [450, 470], [630, 178], [600, 172], [420, 290]], "confidence": 0.95},
+        {"id": "tjns_turn_left", "class_name": "turn-lane", "label": 20, "shape": "polygon",
+         "points_px": [[320, 470], [190, 470], [10, 178], [40, 172], [220, 290]], "confidence": 0.9}
+      ]
+    },
+    {
+      "frame_id": 4,
+      "objects": [
+        {"id": "tjns_main_current", "class_name": "main-lane", "label": 6, "shape": "polygon",
+         "points_px": [[250, 470], [390, 470], [370, 300], [270, 300]], "confidence": 1.0},
+        {"id": "tjns_turn_right", "class_name": "turn-lane", "label": 20, "shape": "polygon",
+         "points_px": [[320, 470], [450, 470], [630, 178], [600, 172], [420, 290]], "confidence": 0.95},
+        {"id": "tjns_turn_left", "class_name": "turn-lane", "label": 20, "shape": "polygon",
+         "points_px": [[320, 470], [190, 470], [10, 178], [40, 172], [220, 290]], "confidence": 0.9}
+      ]
+    }
+  ],
+  "assertions": {
+    "expected_selected_lane": "tjns_turn_right",
+    "max_lane_switch_count": 1,
+    "max_jitter_epsilon_x_mm": 200.0,
+    "max_jitter_theta_rad": 0.3,
+    "expected_blocked_state": false,
+    "expected_trajectory_kind": "turn_right"
+  }
+}

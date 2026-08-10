@@ -1,0 +1,44 @@
+[0.010s] Invoking command in '/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/goln/JetbotRos2_ws/install/yolo_demo:/home/goln/JetbotRos2_ws/install/pkg_param:/home/goln/JetbotRos2_ws/install/pkg_action:/home/goln/JetbotRos2_ws/install/learn_launch:/opt/ros/humble /usr/bin/cmake --build /home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception -- -j12 -l12
+[0.066s] [35m[1mConsolidate compiler generated dependencies of target yolo26_seg_lib[0m
+[0.066s] [35m[1mConsolidate compiler generated dependencies of target control_node[0m
+[0.066s] [35m[1mConsolidate compiler generated dependencies of target ipm_transform_node[0m
+[0.066s] [35m[1mConsolidate compiler generated dependencies of target video_publisher_node[0m
+[0.090s] [ 16%] Built target yolo26_seg_lib
+[0.099s] [35m[1mConsolidate compiler generated dependencies of target video_test_node[0m
+[0.099s] [35m[1mConsolidate compiler generated dependencies of target ncnn_inference_node[0m
+[0.102s] [ 33%] Built target control_node
+[0.103s] [ 50%] Built target video_publisher_node
+[0.106s] [ 66%] Built target ipm_transform_node
+[0.114s] [ 83%] [32mBuilding CXX object CMakeFiles/video_test_node.dir/src/video_test_node.cpp.o[0m
+[0.114s] [ 83%] [32mBuilding CXX object CMakeFiles/ncnn_inference_node.dir/src/ncnn_inference_node.cpp.o[0m
+[4.760s] [ 91%] [32m[1mLinking CXX executable video_test_node[0m
+[5.430s] [ 91%] Built target video_test_node
+[10.557s] [100%] [32m[1mLinking CXX executable ncnn_inference_node[0m
+[10.895s] [100%] Built target ncnn_inference_node
+[10.903s] Invoked command in '/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/goln/JetbotRos2_ws/install/yolo_demo:/home/goln/JetbotRos2_ws/install/pkg_param:/home/goln/JetbotRos2_ws/install/pkg_action:/home/goln/JetbotRos2_ws/install/learn_launch:/opt/ros/humble /usr/bin/cmake --build /home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception -- -j12 -l12
+[10.911s] Invoking command in '/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/goln/JetbotRos2_ws/install/yolo_demo:/home/goln/JetbotRos2_ws/install/pkg_param:/home/goln/JetbotRos2_ws/install/pkg_action:/home/goln/JetbotRos2_ws/install/learn_launch:/opt/ros/humble /usr/bin/cmake --install /home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception
+[10.917s] -- Install configuration: "Release"
+[10.918s] -- Execute custom install script
+[10.919s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/lib/avs_perception/libyolo26_seg_lib.a
+[10.919s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/lib/avs_perception/ncnn_inference_node
+[10.919s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/lib/avs_perception/video_test_node
+[10.919s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/lib/avs_perception/video_publisher_node
+[10.919s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/lib/avs_perception/ipm_transform_node
+[10.919s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/lib/avs_perception/control_node
+[10.920s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/launch/perception.launch.py
+[10.920s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/ament_index/resource_index/package_run_dependencies/avs_perception
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/ament_index/resource_index/parent_prefix_path/avs_perception
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/environment/ament_prefix_path.sh
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/environment/ament_prefix_path.dsv
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/environment/path.sh
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/environment/path.dsv
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/local_setup.bash
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/local_setup.sh
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/local_setup.zsh
+[10.921s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/local_setup.dsv
+[10.921s] -- Symlinking: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/package.dsv
+[10.928s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/ament_index/resource_index/packages/avs_perception
+[10.928s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/cmake/avs_perceptionConfig.cmake
+[10.928s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/cmake/avs_perceptionConfig-version.cmake
+[10.929s] -- Up-to-date symlink: /home/goln/SimpleSysIDV/ros2_ws/install_host/avs_perception/share/avs_perception/package.xml
+[10.930s] Invoked command in '/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/goln/JetbotRos2_ws/install/yolo_demo:/home/goln/JetbotRos2_ws/install/pkg_param:/home/goln/JetbotRos2_ws/install/pkg_action:/home/goln/JetbotRos2_ws/install/learn_launch:/opt/ros/humble /usr/bin/cmake --install /home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception

@@ -1,0 +1,8 @@
+source;share/avs_perception/hook/cmake_prefix_path.ps1
+source;share/avs_perception/hook/cmake_prefix_path.dsv
+source;share/avs_perception/hook/cmake_prefix_path.sh
+source;share/avs_perception/local_setup.bash
+source;share/avs_perception/local_setup.dsv
+source;share/avs_perception/local_setup.ps1
+source;share/avs_perception/local_setup.sh
+source;share/avs_perception/local_setup.zsh

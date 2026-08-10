@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  avs_perception:
+    image: avs_perception:arm64
+    container_name: avs_perception_container
+    network_mode: host
+    ipc: host
+    privileged: true
+    volumes:
+      # Bind mount workspace, models, and config
+      - ./ros2_ws:/workspace/ros2_ws
+      - ./models:/workspace/models
+      - ./config:/workspace/config
+    environment:
+      - ROS_DOMAIN_ID=20
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    command: bash -c "cd /workspace/ros2_ws && rm -rf build install log && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release && source install/setup.bash && (ros2 run avs_perception ncnn_inference_node --ros-args -p use_fp16_packed:=true -p use_fp16_storage:=true -p use_fp16_arithmetic:=true -p use_packing_layout:=true & ros2 run avs_perception ipm_transform_node --ros-args -p lookahead_d_min_mm:=140.0 -p lookahead_d_max_mm:=140.0 & ros2 run avs_perception control_node --ros-args -p turn_proximity_mm:=800.0)"
+
+  video_publisher:
+    image: avs_perception:arm64
+    container_name: video_publisher_container
+    network_mode: host
+    ipc: host
+    privileged: true
+    volumes:
+      - /dev:/dev
+      - ./ros2_ws:/workspace/ros2_ws
+      - ./config:/workspace/config
+      - ./test:/workspace/test
+    environment:
+      - ROS_DOMAIN_ID=20
+    command: bash -c "while [ -f /workspace/ros2_ws/install/setup.bash ]; do echo 'Waiting for old build to be cleared...'; sleep 1; done && while [ ! -f /workspace/ros2_ws/install/setup.bash ]; do echo 'Waiting for build completion...'; sleep 2; done && while [ ! -f /workspace/ros2_ws/install/avs_perception/lib/avs_perception/video_publisher_node ]; do echo 'Waiting for video_publisher_node...'; sleep 2; done && cd /workspace/ros2_ws && source install/setup.bash && ros2 run avs_perception video_publisher_node"
+
+  # micro-ROS agent: cầu nối Serial (ESP32) <-> ROS2 DDS.
+  # Khai báo ở đây thay vì `docker run` rời để Compose đảm bảo SINGLETON:
+  # container_name cố định => chạy `up -d` bao nhiêu lần cũng chỉ 1 instance
+  # giữ /dev/ttyUSB0. Khởi động qua scripts/start_agent_rpi5.sh.
+  micro_ros_agent:
+    image: microros/micro-ros-agent:humble
+    container_name: micro_ros_agent
+    network_mode: host
+    ipc: host
+    privileged: true
+    restart: unless-stopped
+    volumes:
+      - /dev:/dev
+      - /dev/shm:/dev/shm
+    environment:
+      - ROS_DOMAIN_ID=20
+      - ROS_LOCALHOST_ONLY=0
+    command: serial --dev /dev/ttyUSB0 -b 921600 -v4
+
+  web_dashboard:
+    image: avs_perception:arm64
+    container_name: web_dashboard_container
+    network_mode: host
+    ipc: host
+    volumes:
+      - ./ros2_ws:/workspace/ros2_ws
+      - ./web_dashboard:/workspace/web_dashboard
+      - ./config:/workspace/config
+      - ./test:/workspace/test
+    environment:
+      - ROS_DOMAIN_ID=20
+    ports:
+      - "8000:8000"
+    command: python3 /workspace/web_dashboard/backend/main.py

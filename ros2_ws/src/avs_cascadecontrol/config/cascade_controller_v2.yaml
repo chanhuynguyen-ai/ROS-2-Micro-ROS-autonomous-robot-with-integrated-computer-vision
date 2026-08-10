@@ -1,0 +1,96 @@
+cascade_controller_v2:
+  ros__parameters:
+
+    enable_cmd: false
+    control_hz: 50.0
+
+    control_error_topic: /avs/control_error
+    lane_state_topic: /avs/lane_state
+    odom_topic: /odom_raw
+    scan_topic: /scan
+    cmd_vel_topic: /cmd_vel
+
+    ref_topic: /avs/cascade_controller_v2_ref
+    state_topic: /avs/cascade_controller_v2_state
+
+    track_width_m: 0.135
+    wheel_radius_m: 0.0225
+
+    epsilon_sign: 1.0
+    theta_sign: 1.0
+    outer_control_sign: -1.0
+    invert_angular: false
+    x_bias_m: 0.0
+
+    error_timeout_s: 1.20
+    odom_timeout_s: 0.60
+    blind_hold_s: 0.25
+    blind_v: 0.030
+    startup_hold_s: 0.20
+    startup_v: 0.050
+
+    median_window: 5
+    error_filter_tau_s: 0.30
+    derivative_filter_tau_s: 0.55
+
+    x_deadband_m: 0.012
+    theta_deadband_rad: 0.020
+
+    outer_kp_lat: 0.78
+    outer_kd_lat: 0.040
+    outer_kp_heading: 0.72
+    outer_kd_heading: 0.028
+
+    omega_ref_max: 0.38
+    omega_ref_deadband: 0.008
+    omega_ref_rate_up: 0.60
+    omega_ref_rate_down: 0.90
+    omega_zero_cross_rate: 0.34
+
+    v_max: 0.145
+    v_min: 0.048
+    v_curve_min: 0.065
+    v_recovery_max: 0.078
+    v_lane_change_max: 0.082
+
+    speed_slow_lat: 1.20
+    speed_slow_heading: 0.95
+    speed_slow_curvature: 0.070
+
+    v_ref_rate_up: 0.18
+    v_ref_rate_down: 0.40
+
+    recovery_gain_multiplier: 1.20
+    lane_change_gain_multiplier: 1.08
+    soft_replan_gain_multiplier: 0.80
+    hold_on_planner_hold: false
+
+    inner_kp_left: 0.48
+    inner_kd_left: 0.010
+    inner_kp_right: 0.48
+    inner_kd_right: 0.010
+
+    inner_derivative_tau_s: 0.18
+    inner_error_deadband_mps: 0.004
+    inner_correction_max_mps: 0.052
+
+    wheel_ref_max_mps: 0.175
+    wheel_cmd_max_mps: 0.185
+    wheel_cmd_rate_up_mps2: 0.32
+    wheel_cmd_rate_down_mps2: 0.58
+
+    allow_reverse_wheel: false
+    minimum_forward_wheel_mps: 0.018
+
+    enable_calibration: true
+    linear_cmd_scale: 1.245
+    angular_cmd_gain: 0.92
+
+    linear_cmd_max: 0.145
+    angular_cmd_max: 0.42
+
+    enable_lidar_safety: false
+
+    check_cmd_vel_conflict: true
+    allow_cmd_vel_conflict: false
+    publish_zero_on_conflict: true

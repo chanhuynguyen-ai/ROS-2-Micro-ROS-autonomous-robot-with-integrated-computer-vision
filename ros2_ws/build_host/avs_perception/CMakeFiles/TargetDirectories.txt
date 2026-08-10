@@ -1,0 +1,15 @@
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/uninstall.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/avs_perception_uninstall.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/yolo26_seg_lib.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/ncnn_inference_node.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/video_test_node.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/video_publisher_node.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/ipm_transform_node.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/control_node.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/test.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/edit_cache.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/rebuild_cache.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/list_install_components.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/install.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/install/local.dir
+/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception/CMakeFiles/install/strip.dir

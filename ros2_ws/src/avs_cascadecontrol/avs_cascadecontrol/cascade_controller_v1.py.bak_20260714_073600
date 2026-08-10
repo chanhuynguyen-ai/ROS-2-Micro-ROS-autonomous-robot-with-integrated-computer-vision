@@ -1,0 +1,1290 @@
+#!/usr/bin/env python3
+
+import json
+import math
+import signal
+import statistics
+import time
+from collections import deque
+
+import rclpy
+from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
+
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String, Bool
+
+
+def clamp(value, low, high):
+    return max(low, min(high, value))
+
+
+def approach(current, target, max_delta):
+    if target > current + max_delta:
+        return current + max_delta
+    if target < current - max_delta:
+        return current - max_delta
+    return target
+
+
+def finite_float(value, default=None):
+    try:
+        v = float(value)
+        if math.isfinite(v):
+            return v
+    except Exception:
+        pass
+    return default
+
+
+def parse_bool(value, default=True):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() not in ["false", "0", "no", "none", "invalid", ""]
+    if value is None:
+        return default
+    try:
+        return bool(value)
+    except Exception:
+        return default
+
+
+def yaw_from_quat(q):
+    x = q.x
+    y = q.y
+    z = q.z
+    w = q.w
+    siny_cosp = 2.0 * (w * z + x * y)
+    cosy_cosp = 1.0 - 2.0 * (y * y + z * z)
+    return math.atan2(siny_cosp, cosy_cosp)
+
+
+class CascadeControllerV1(Node):
+    """
+    cascade_controller_v1
+
+    Integrated cascade controller for the optimized AVS vision pipeline.
+
+    Inputs:
+      /avs/control_error
+      /avs/lane_state
+      /odom_raw
+      /scan
+      /avs/cascade_enable_cmd
+      /avs/cascade_emergency_stop
+
+    Outputs:
+      /cmd_vel
+      /avs/cascade_controller_v1_ref
+      /avs/cascade_controller_v1_state
+
+    Design:
+      outer loop: lane error -> v_ref, omega_ref
+      inner loop: v_ref, omega_ref -> soft differential cmd_vel
+    """
+
+    def __init__(self):
+        super().__init__("cascade_controller_v1")
+
+        # Topics
+        self.declare_parameter("control_error_topic", "/avs/control_error")
+        self.declare_parameter("lane_state_topic", "/avs/lane_state")
+        self.declare_parameter("odom_topic", "/odom_raw")
+        self.declare_parameter("scan_topic", "/scan")
+        self.declare_parameter("cmd_vel_topic", "/cmd_vel")
+        self.declare_parameter("ref_topic", "/avs/cascade_controller_v1_ref")
+        self.declare_parameter("state_topic", "/avs/cascade_controller_v1_state")
+        self.declare_parameter("runtime_enable_topic", "/avs/cascade_enable_cmd")
+        self.declare_parameter("emergency_stop_topic", "/avs/cascade_emergency_stop")
+
+        # Runtime
+        self.declare_parameter("enable_cmd", False)
+        self.declare_parameter("control_hz", 50.0)
+        self.declare_parameter("error_timeout_s", 1.2)
+        self.declare_parameter("blind_hold_s", 1.0)
+        self.declare_parameter("startup_straight_s", 0.50)
+        self.declare_parameter("startup_v", 0.040)
+
+        # Vision/FPS adaptive speed
+        self.declare_parameter("fps_init", 3.0)
+        self.declare_parameter("fps_min", 0.8)
+        self.declare_parameter("fps_max", 25.0)
+        self.declare_parameter("fps_tau_s", 1.0)
+        self.declare_parameter("target_distance_per_frame_m", 0.030)
+
+        # Speed plan
+        self.declare_parameter("v_max", 0.105)
+        self.declare_parameter("v_center", 0.090)
+        self.declare_parameter("v_min", 0.035)
+        self.declare_parameter("v_curve_max", 0.055)
+        self.declare_parameter("v_lane_change_max", 0.050)
+        self.declare_parameter("v_recover_max", 0.060)
+        self.declare_parameter("v_large_error", 0.040)
+        self.declare_parameter("v_blind", 0.035)
+        self.declare_parameter("v_jump_hold", 0.040)
+
+        # Vehicle geometry
+        self.declare_parameter("track_width_m", 0.135)
+        self.declare_parameter("wheel_radius_m", 0.0225)
+
+        # Input convention
+        self.declare_parameter("epsilon_sign", 1.0)
+        self.declare_parameter("theta_sign", 1.0)
+        self.declare_parameter("theta_control_sign", -1.0)
+        self.declare_parameter("invert_angular", False)
+        self.declare_parameter("x_bias_m", 0.0)
+
+        # Filtering
+        self.declare_parameter("median_window", 5)
+        self.declare_parameter("error_filter_tau_s", 0.46)
+        self.declare_parameter("derivative_filter_tau_s", 0.85)
+
+        # Deadband/zones
+        self.declare_parameter("x_deadband_m", 0.014)
+        self.declare_parameter("theta_deadband_rad", 0.024)
+
+        self.declare_parameter("center_x_m", 0.032)
+        self.declare_parameter("center_theta_rad", 0.065)
+
+        self.declare_parameter("near_x_m", 0.070)
+        self.declare_parameter("near_theta_rad", 0.150)
+
+        self.declare_parameter("large_error_x_m", 0.155)
+        self.declare_parameter("large_error_theta_rad", 0.420)
+
+        # Curve/intent detection
+        self.declare_parameter("curve_enter_x_m", 0.085)
+        self.declare_parameter("curve_enter_theta_rad", 0.180)
+        self.declare_parameter("curve_enter_kappa", 0.75)
+        self.declare_parameter("curve_confirm_frames", 2)
+        self.declare_parameter("curve_release_frames", 4)
+
+        # Outlier/dropout/jump guard
+        self.declare_parameter("max_abs_x_m", 0.42)
+        self.declare_parameter("max_abs_theta_rad", 1.20)
+        self.declare_parameter("min_valid_lookahead_m", 0.16)
+
+        self.declare_parameter("jump_guard_enable", True)
+        self.declare_parameter("jump_x_m", 0.160)
+        self.declare_parameter("jump_theta_rad", 0.420)
+        self.declare_parameter("jump_hold_s", 0.60)
+
+        # Outer controller gains
+        self.declare_parameter("k_pp_near", 0.15)
+        self.declare_parameter("k_lat_near", 0.24)
+        self.declare_parameter("k_theta_near", 0.12)
+
+        self.declare_parameter("k_pp_mid", 0.45)
+        self.declare_parameter("k_lat_mid", 0.56)
+        self.declare_parameter("k_theta_mid", 0.22)
+
+        self.declare_parameter("k_pp_curve", 0.78)
+        self.declare_parameter("k_lat_curve", 0.78)
+        self.declare_parameter("k_theta_curve", 0.30)
+
+        self.declare_parameter("k_pp_large", 0.28)
+        self.declare_parameter("k_lat_large", 0.40)
+        self.declare_parameter("k_theta_large", 0.18)
+
+        self.declare_parameter("kd_lat", 0.010)
+        self.declare_parameter("kd_theta", 0.014)
+
+        # Speed reduction
+        self.declare_parameter("k_slow_x", 1.90)
+        self.declare_parameter("k_slow_theta", 1.10)
+        self.declare_parameter("k_slow_kappa", 0.16)
+
+        # Omega limits
+        self.declare_parameter("omega_center_max", 0.000)
+        self.declare_parameter("omega_near_max", 0.032)
+        self.declare_parameter("omega_mid_max", 0.190)
+        self.declare_parameter("omega_curve_max", 0.440)
+        self.declare_parameter("omega_lane_change_max", 0.300)
+        self.declare_parameter("omega_large_error_max", 0.240)
+        self.declare_parameter("omega_abs_max", 0.500)
+        self.declare_parameter("omega_deadband", 0.006)
+
+        # Rate limits
+        self.declare_parameter("v_rate_up", 0.14)
+        self.declare_parameter("v_rate_down", 0.36)
+        self.declare_parameter("omega_rate_center", 0.22)
+        self.declare_parameter("omega_rate_mid", 0.58)
+        self.declare_parameter("omega_rate_curve", 0.95)
+
+        # Lookahead/curvature
+        self.declare_parameter("ld_min_m", 0.18)
+        self.declare_parameter("ld_max_m", 0.85)
+        self.declare_parameter("default_lookahead_m", 0.42)
+        self.declare_parameter("max_abs_kappa", 3.0)
+
+        # Inner soft differential mixer
+        self.declare_parameter("v_max_cmd", 0.12)
+        self.declare_parameter("omega_max_cmd", 0.70)
+
+        self.declare_parameter("wheel_speed_rate", 0.18)
+        self.declare_parameter("wheel_speed_decel_rate", 0.35)
+
+        self.declare_parameter("same_direction_inner_fraction", 0.44)
+        self.declare_parameter("same_direction_min_inner_mps", 0.020)
+
+        self.declare_parameter("enable_soft_counter_turn", False)
+        self.declare_parameter("counter_start_omega", 0.38)
+        self.declare_parameter("counter_full_omega", 0.72)
+        self.declare_parameter("counter_outer_min_mps", 0.040)
+        self.declare_parameter("counter_outer_max_mps", 0.060)
+        self.declare_parameter("counter_reverse_max_mps", 0.010)
+
+        self.declare_parameter("inner_omega_deadband", 0.014)
+
+        # Calibration command output
+        self.declare_parameter("enable_calibration", True)
+        self.declare_parameter("linear_cmd_scale", 1.245)
+        self.declare_parameter("angular_cmd_scale", 0.85)
+
+        # Lidar safety
+        self.declare_parameter("enable_lidar_safety", True)
+        self.declare_parameter("emergency_distance", 0.12)
+        self.declare_parameter("stop_distance", 0.18)
+        self.declare_parameter("slow_distance", 0.38)
+        self.declare_parameter("front_angle_deg", 16.0)
+
+        # Conflict/safety
+        self.declare_parameter("check_cmd_vel_conflict", True)
+        self.declare_parameter("allow_cmd_vel_conflict", False)
+        self.declare_parameter("publish_zero_on_conflict", True)
+
+        self.declare_parameter("stop_burst_count", 45)
+        self.declare_parameter("stop_burst_dt", 0.025)
+        self.declare_parameter("always_publish_stop_on_exit", True)
+
+        self.control_error_topic = str(self.get_parameter("control_error_topic").value)
+        self.lane_state_topic = str(self.get_parameter("lane_state_topic").value)
+        self.odom_topic = str(self.get_parameter("odom_topic").value)
+        self.scan_topic = str(self.get_parameter("scan_topic").value)
+        self.cmd_vel_topic = str(self.get_parameter("cmd_vel_topic").value)
+        self.ref_topic = str(self.get_parameter("ref_topic").value)
+        self.state_topic = str(self.get_parameter("state_topic").value)
+
+        self.cmd_pub = self.create_publisher(Twist, self.cmd_vel_topic, 10)
+        self.ref_pub = self.create_publisher(Twist, self.ref_topic, 10)
+        self.state_pub = self.create_publisher(String, self.state_topic, 10)
+
+        self.create_subscription(String, self.control_error_topic, self.control_error_cb, 10)
+        self.create_subscription(String, self.lane_state_topic, self.lane_state_cb, 10)
+        self.create_subscription(Odometry, self.odom_topic, self.odom_cb, qos_profile_sensor_data)
+        self.create_subscription(LaserScan, self.scan_topic, self.scan_cb, qos_profile_sensor_data)
+        self.create_subscription(Bool, str(self.get_parameter("runtime_enable_topic").value), self.runtime_enable_cb, 10)
+        self.create_subscription(Bool, str(self.get_parameter("emergency_stop_topic").value), self.emergency_stop_cb, 10)
+
+        # Runtime flags
+        self.runtime_enable = False
+        self.emergency_stop = False
+
+        # Raw vision state
+        self.last_error_time = -1.0
+        self.first_valid_time = -1.0
+        self.last_frame_time = None
+
+        self.raw_valid = False
+        self.raw_valid_reason = "waiting"
+        self.raw_lane_state = ""
+        self.raw_confidence = 0.0
+        self.raw_e_lat = 0.0
+        self.raw_e_theta = 0.0
+        self.raw_lookahead = float(self.get_parameter("default_lookahead_m").value)
+        self.raw_kappa = 0.0
+
+        self.last_accepted_e = None
+        self.last_accepted_theta = None
+
+        # Lane state debug from optimized planner
+        self.lane_state_debug = {}
+        self.last_lane_state_time = -1.0
+        self.intent_hint = "UNKNOWN"
+        self.trajectory_hint = "UNKNOWN"
+        self.planner_status_hint = "UNKNOWN"
+
+        # Filter buffers
+        mw = max(1, int(self.get_parameter("median_window").value))
+        self.e_buf = deque(maxlen=mw)
+        self.theta_buf = deque(maxlen=mw)
+
+        self.e_f = 0.0
+        self.theta_f = 0.0
+        self.de_f = 0.0
+        self.dtheta_f = 0.0
+        self.prev_e_used = 0.0
+        self.prev_theta_used = 0.0
+
+        self.fps_est = float(self.get_parameter("fps_init").value)
+
+        # Curve state
+        self.curve_confirmed = False
+        self.curve_count = 0
+        self.curve_release_count = 0
+        self.curve_sign = 0
+
+        # Guard state
+        self.jump_hold_until = -1.0
+        self.jump_reason = "none"
+
+        # Odom/scan
+        self.odom_v = 0.0
+        self.odom_omega = 0.0
+        self.odom_x = 0.0
+        self.odom_y = 0.0
+        self.odom_yaw = 0.0
+        self.last_odom_time = -1.0
+
+        self.front_min = float("inf")
+        self.last_scan_time = -1.0
+
+        # Cascade command states
+        self.v_ref = 0.0
+        self.omega_ref = 0.0
+
+        self.v_left_cmd_prev = 0.0
+        self.v_right_cmd_prev = 0.0
+
+        self.v_cmd = 0.0
+        self.omega_cmd = 0.0
+
+        self.prev_loop_time = time.time()
+
+        hz = max(5.0, float(self.get_parameter("control_hz").value))
+        self.create_timer(1.0 / hz, self.control_loop)
+
+        signal.signal(signal.SIGINT, self.signal_stop_handler)
+        signal.signal(signal.SIGTERM, self.signal_stop_handler)
+
+        self.get_logger().info("cascade_controller_v1 started")
+        self.get_logger().info(f"Subscribe control_error: {self.control_error_topic}")
+        self.get_logger().info(f"Subscribe lane_state   : {self.lane_state_topic}")
+        self.get_logger().info(f"Subscribe odom         : {self.odom_topic}")
+        self.get_logger().info(f"Subscribe scan         : {self.scan_topic}")
+        self.get_logger().info(f"Publish cmd_vel        : {self.cmd_vel_topic}")
+        self.get_logger().info(f"Publish state          : {self.state_topic}")
+
+    def now_s(self):
+        return time.time()
+
+    def pfloat(self, name):
+        return float(self.get_parameter(name).value)
+
+    def pint(self, name):
+        return int(self.get_parameter(name).value)
+
+    def pbool(self, name):
+        return bool(self.get_parameter(name).value)
+
+    def pstr(self, name):
+        return str(self.get_parameter(name).value)
+
+    def alpha_from_tau(self, dt, tau):
+        tau = max(1e-3, float(tau))
+        return 1.0 - math.exp(-dt / tau)
+
+    def make_twist(self, v, omega):
+        msg = Twist()
+        msg.linear.x = float(v)
+        msg.angular.z = float(omega)
+        return msg
+
+    def signal_stop_handler(self, signum, frame):
+        self.get_logger().warn(f"Signal {signum}. Sending stop burst.")
+        self.publish_stop_burst()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+    def publish_stop_burst(self):
+        stop = self.make_twist(0.0, 0.0)
+        count = max(5, self.pint("stop_burst_count"))
+        dt = max(0.005, self.pfloat("stop_burst_dt"))
+
+        for _ in range(count):
+            self.cmd_pub.publish(stop)
+            time.sleep(dt)
+
+        self.v_ref = 0.0
+        self.omega_ref = 0.0
+        self.v_left_cmd_prev = 0.0
+        self.v_right_cmd_prev = 0.0
+        self.v_cmd = 0.0
+        self.omega_cmd = 0.0
+
+    def publish_state(self, payload):
+        msg = String()
+        msg.data = json.dumps(payload, ensure_ascii=False)
+        self.state_pub.publish(msg)
+
+    def publish_ref(self, v_ref, omega_ref):
+        self.ref_pub.publish(self.make_twist(v_ref, omega_ref))
+
+    def is_enabled(self):
+        return self.pbool("enable_cmd") or self.runtime_enable
+
+    def runtime_enable_cb(self, msg):
+        self.runtime_enable = bool(msg.data)
+        self.get_logger().warn(f"runtime_enable={self.runtime_enable}")
+        if not self.runtime_enable and not self.pbool("enable_cmd"):
+            self.publish_stop_burst()
+
+    def emergency_stop_cb(self, msg):
+        self.emergency_stop = bool(msg.data)
+        self.get_logger().error(f"emergency_stop={self.emergency_stop}")
+        if self.emergency_stop:
+            self.publish_stop_burst()
+
+    def odom_cb(self, msg):
+        self.odom_x = float(msg.pose.pose.position.x)
+        self.odom_y = float(msg.pose.pose.position.y)
+        self.odom_yaw = yaw_from_quat(msg.pose.pose.orientation)
+        self.odom_v = float(msg.twist.twist.linear.x)
+        self.odom_omega = float(msg.twist.twist.angular.z)
+        self.last_odom_time = self.now_s()
+
+    def scan_cb(self, msg):
+        front_angle = math.radians(self.pfloat("front_angle_deg"))
+        vals = []
+        angle = msg.angle_min
+
+        for r in msg.ranges:
+            if math.isfinite(r) and msg.range_min <= r <= msg.range_max:
+                if abs(angle) <= front_angle:
+                    vals.append(float(r))
+            angle += msg.angle_increment
+
+        self.front_min = min(vals) if vals else float("inf")
+        self.last_scan_time = self.now_s()
+
+    def lane_state_cb(self, msg):
+        try:
+            d = json.loads(msg.data)
+            if not isinstance(d, dict):
+                return
+        except Exception:
+            return
+
+        self.lane_state_debug = d
+        self.last_lane_state_time = self.now_s()
+
+        text = json.dumps(d, ensure_ascii=False).upper()
+
+        if "LANE_CHANGE" in text or "CHANGE_LANE" in text:
+            self.intent_hint = "LANE_CHANGE"
+        elif "TURN_LEFT" in text or "LEFT" in text:
+            self.intent_hint = "TURN_LEFT"
+        elif "TURN_RIGHT" in text or "RIGHT" in text:
+            self.intent_hint = "TURN_RIGHT"
+        elif "FOLLOW_MAIN" in text or "MAIN" in text:
+            self.intent_hint = "FOLLOW_MAIN"
+        else:
+            self.intent_hint = "UNKNOWN"
+
+        if "COMMITTED" in text:
+            self.trajectory_hint = "COMMITTED"
+        elif "HOLD" in text:
+            self.trajectory_hint = "HOLD"
+        elif "RECOVERY" in text:
+            self.trajectory_hint = "RECOVERY"
+        else:
+            self.trajectory_hint = "UNKNOWN"
+
+        if "BLOCKED_BY_MARKING" in text:
+            self.planner_status_hint = "BLOCKED_BY_MARKING"
+        elif "DROPOUT" in text:
+            self.planner_status_hint = "DROPOUT"
+        elif "REPLAN" in text:
+            self.planner_status_hint = "REPLAN"
+        elif "HOLD" in text:
+            self.planner_status_hint = "HOLD"
+        else:
+            self.planner_status_hint = "UNKNOWN"
+
+    def update_fps(self, now, data):
+        fps_msg = finite_float(
+            data.get("fps", data.get("fps_est", data.get("vision_fps", None))),
+            None
+        )
+
+        if fps_msg is not None and fps_msg > 0.1:
+            fps_now = clamp(fps_msg, self.pfloat("fps_min"), self.pfloat("fps_max"))
+            dt_frame = 1.0 / max(fps_now, 1e-3)
+        else:
+            if self.last_frame_time is None:
+                self.last_frame_time = now
+                return
+            dt_frame = max(now - self.last_frame_time, 1e-3)
+            fps_now = clamp(1.0 / dt_frame, self.pfloat("fps_min"), self.pfloat("fps_max"))
+
+        self.last_frame_time = now
+
+        alpha = self.alpha_from_tau(dt_frame, self.pfloat("fps_tau_s"))
+        self.fps_est = (1.0 - alpha) * self.fps_est + alpha * fps_now
+
+    def extract_control_error(self, data):
+        e_lat = None
+        lat_source = "none"
+
+        for key in ["lateral_error_m", "lateral_error", "e_lat_m", "e_y_m", "x_error_m"]:
+            if key in data:
+                e_lat = finite_float(data.get(key), None)
+                lat_source = key
+                break
+
+        if e_lat is None:
+            for key in ["epsilon_x_mm", "x_mm", "e_y_mm", "e_lat_mm"]:
+                if key in data:
+                    v = finite_float(data.get(key), None)
+                    if v is not None:
+                        e_lat = v / 1000.0
+                        lat_source = key
+                        break
+
+        if e_lat is None:
+            e_lat = 0.0
+
+        e_lat = self.pfloat("epsilon_sign") * e_lat + self.pfloat("x_bias_m")
+
+        e_theta = None
+        theta_source = "none"
+
+        for key in ["heading_error_rad", "heading_error", "e_theta_rad", "theta_error_rad", "theta_rad"]:
+            if key in data:
+                e_theta = finite_float(data.get(key), None)
+                theta_source = key
+                break
+
+        if e_theta is None:
+            e_theta = 0.0
+
+        e_theta = self.pfloat("theta_sign") * e_theta
+
+        lookahead = None
+        lookahead_source = "default"
+
+        for key in ["lookahead_m", "lookahead_d_m", "epsilon_y_m", "target_y_m"]:
+            if key in data:
+                lookahead = finite_float(data.get(key), None)
+                lookahead_source = key
+                break
+
+        if lookahead is None:
+            for key in ["lookahead_d_mm", "epsilon_y_mm", "target_y_mm", "y_mm"]:
+                if key in data:
+                    v = finite_float(data.get(key), None)
+                    if v is not None:
+                        lookahead = v / 1000.0
+                        lookahead_source = key
+                        break
+
+        if lookahead is None:
+            lookahead = self.pfloat("default_lookahead_m")
+
+        lookahead = clamp(abs(lookahead), self.pfloat("ld_min_m"), self.pfloat("ld_max_m"))
+
+        curvature_inv_mm = finite_float(data.get("curvature_inv_mm", 0.0), 0.0)
+        kappa = clamp(curvature_inv_mm * 1000.0, -self.pfloat("max_abs_kappa"), self.pfloat("max_abs_kappa"))
+
+        confidence = finite_float(data.get("confidence", data.get("conf", data.get("prob", 1.0))), 1.0)
+        lane_state = str(data.get("lane_state", "")).upper()
+
+        raw_valid = parse_bool(data.get("valid", True), True)
+        lane_valid = parse_bool(data.get("lane_valid", True), True)
+
+        if lane_state in ["LOST", "INVALID", "NO_LANE", "NONE"]:
+            return False, "lane_state_invalid", e_lat, e_theta, lookahead, kappa, confidence, lane_state, lat_source, theta_source, lookahead_source
+
+        if abs(e_lat) > self.pfloat("max_abs_x_m"):
+            return False, "e_lat_outlier", e_lat, e_theta, lookahead, kappa, confidence, lane_state, lat_source, theta_source, lookahead_source
+
+        if abs(e_theta) > self.pfloat("max_abs_theta_rad"):
+            return False, "theta_outlier", e_lat, e_theta, lookahead, kappa, confidence, lane_state, lat_source, theta_source, lookahead_source
+
+        if lookahead < self.pfloat("min_valid_lookahead_m"):
+            return False, "lookahead_too_near", e_lat, e_theta, lookahead, kappa, confidence, lane_state, lat_source, theta_source, lookahead_source
+
+        valid = raw_valid and lane_valid
+        if lane_state == "FOLLOW_MAIN":
+            valid = True
+
+        return valid, "ok" if valid else "invalid_flags", e_lat, e_theta, lookahead, kappa, confidence, lane_state, lat_source, theta_source, lookahead_source
+
+    def jump_guard_triggered(self, e, theta):
+        if not self.pbool("jump_guard_enable"):
+            return False, "disabled"
+
+        if self.last_accepted_e is None or self.last_accepted_theta is None:
+            return False, "first_valid"
+
+        de = abs(e - self.last_accepted_e)
+        dt = abs(theta - self.last_accepted_theta)
+
+        if de > self.pfloat("jump_x_m") or dt > self.pfloat("jump_theta_rad"):
+            return True, f"jump_e={de:.3f}, jump_theta={dt:.3f}"
+
+        return False, "normal"
+
+    def control_error_cb(self, msg):
+        now = self.now_s()
+
+        try:
+            data = json.loads(msg.data)
+            if not isinstance(data, dict):
+                return
+        except Exception as exc:
+            self.get_logger().warn(f"Invalid control_error JSON: {exc}")
+            return
+
+        valid, reason, e, theta, ld, kappa, conf, lane_state, lat_src, theta_src, ld_src = self.extract_control_error(data)
+        self.update_fps(now, data)
+
+        self.raw_valid = valid
+        self.raw_valid_reason = reason
+        self.raw_e_lat = e
+        self.raw_e_theta = theta
+        self.raw_lookahead = ld
+        self.raw_kappa = kappa
+        self.raw_confidence = conf
+        self.raw_lane_state = lane_state
+        self.raw_lat_source = lat_src
+        self.raw_theta_source = theta_src
+        self.raw_lookahead_source = ld_src
+
+        self.last_error_time = now
+
+        if not valid:
+            return
+
+        if self.first_valid_time < 0.0:
+            self.first_valid_time = now
+
+        jump, jump_reason = self.jump_guard_triggered(e, theta)
+        if jump:
+            self.jump_hold_until = now + self.pfloat("jump_hold_s")
+            self.jump_reason = jump_reason
+            return
+
+        self.jump_reason = "none"
+
+        self.last_accepted_e = e
+        self.last_accepted_theta = theta
+
+        self.update_median_window()
+        self.e_buf.append(e)
+        self.theta_buf.append(theta)
+
+    def update_median_window(self):
+        mw = max(1, self.pint("median_window"))
+        if self.e_buf.maxlen != mw:
+            self.e_buf = deque(list(self.e_buf)[-mw:], maxlen=mw)
+            self.theta_buf = deque(list(self.theta_buf)[-mw:], maxlen=mw)
+
+    def filtered_error(self, dt, use_measurement):
+        if use_measurement and len(self.e_buf) > 0:
+            target_e = statistics.median(self.e_buf)
+            target_theta = statistics.median(self.theta_buf)
+        else:
+            target_e = 0.0
+            target_theta = 0.0
+
+        alpha = self.alpha_from_tau(dt, self.pfloat("error_filter_tau_s"))
+
+        self.e_f = (1.0 - alpha) * self.e_f + alpha * target_e
+        self.theta_f = (1.0 - alpha) * self.theta_f + alpha * target_theta
+
+        e_used = 0.0 if abs(self.e_f) < self.pfloat("x_deadband_m") else self.e_f
+        theta_used = 0.0 if abs(self.theta_f) < self.pfloat("theta_deadband_rad") else self.theta_f
+
+        de_raw = (e_used - self.prev_e_used) / max(dt, 1e-3)
+        dtheta_raw = (theta_used - self.prev_theta_used) / max(dt, 1e-3)
+
+        self.prev_e_used = e_used
+        self.prev_theta_used = theta_used
+
+        d_alpha = self.alpha_from_tau(dt, self.pfloat("derivative_filter_tau_s"))
+        self.de_f = (1.0 - d_alpha) * self.de_f + d_alpha * de_raw
+        self.dtheta_f = (1.0 - d_alpha) * self.dtheta_f + d_alpha * dtheta_raw
+
+        return e_used, theta_used
+
+    def update_curve_state(self, e, theta, kappa, intent_hint):
+        intent_curve = intent_hint in ["TURN_LEFT", "TURN_RIGHT", "LANE_CHANGE"]
+
+        candidate = (
+            intent_curve
+            or abs(e) >= self.pfloat("curve_enter_x_m")
+            or abs(theta) >= self.pfloat("curve_enter_theta_rad")
+            or abs(kappa) >= self.pfloat("curve_enter_kappa")
+        )
+
+        sign_src = theta if abs(theta) > 0.06 else e
+        sign = 1 if sign_src > 0 else -1 if sign_src < 0 else 0
+
+        if candidate and sign != 0:
+            if sign == self.curve_sign:
+                self.curve_count += 1
+            else:
+                self.curve_count = 1
+                self.curve_sign = sign
+
+            self.curve_release_count = 0
+
+            if self.curve_count >= self.pint("curve_confirm_frames"):
+                self.curve_confirmed = True
+        else:
+            self.curve_release_count += 1
+
+            if self.curve_release_count >= self.pint("curve_release_frames"):
+                self.curve_confirmed = False
+                self.curve_count = 0
+                self.curve_sign = 0
+
+        return self.curve_confirmed
+
+    def speed_from_fps(self):
+        v = self.fps_est * self.pfloat("target_distance_per_frame_m")
+        return clamp(v, self.pfloat("v_min"), self.pfloat("v_max"))
+
+    def compute_outer(self, e, theta):
+        ld = max(self.pfloat("ld_min_m"), self.raw_lookahead)
+        kappa = self.raw_kappa
+
+        curvature_from_error = -2.0 * e / max(ld * ld, 1e-4)
+
+        intent = self.intent_hint
+        curve = self.update_curve_state(e, theta, kappa, intent)
+
+        center = (
+            abs(self.e_f) <= self.pfloat("center_x_m")
+            and abs(self.theta_f) <= self.pfloat("center_theta_rad")
+        )
+
+        near = (
+            abs(self.e_f) <= self.pfloat("near_x_m")
+            and abs(self.theta_f) <= self.pfloat("near_theta_rad")
+        )
+
+        large_error = (
+            abs(self.e_f) >= self.pfloat("large_error_x_m")
+            or abs(self.theta_f) >= self.pfloat("large_error_theta_rad")
+        )
+
+        lane_change = intent == "LANE_CHANGE"
+
+        v_base = self.speed_from_fps()
+
+        slow_factor = math.exp(
+            -self.pfloat("k_slow_x") * abs(self.e_f)
+            -self.pfloat("k_slow_theta") * abs(self.theta_f)
+            -self.pfloat("k_slow_kappa") * abs(kappa)
+        )
+
+        theta_term_sign = self.pfloat("theta_control_sign")
+
+        if center:
+            mode = "center_cruise"
+            v_des = min(v_base, self.pfloat("v_center"))
+            omega_limit = self.pfloat("omega_center_max")
+            k_pp = 0.0
+            k_lat = 0.0
+            k_theta = 0.0
+            omega_raw = 0.0
+
+        elif near and not curve:
+            mode = "near_center_cascade"
+            v_des = min(v_base, self.pfloat("v_recover_max"))
+            omega_limit = self.pfloat("omega_near_max")
+            k_pp = self.pfloat("k_pp_near")
+            k_lat = self.pfloat("k_lat_near")
+            k_theta = self.pfloat("k_theta_near")
+            omega_raw = (
+                k_pp * v_des * curvature_from_error
+                - k_lat * e
+                + theta_term_sign * k_theta * theta
+                - self.pfloat("kd_lat") * self.de_f
+                - self.pfloat("kd_theta") * self.dtheta_f
+            )
+
+        elif large_error:
+            mode = "large_error_slow_recover"
+            v_des = self.pfloat("v_large_error")
+            omega_limit = self.pfloat("omega_large_error_max")
+            k_pp = self.pfloat("k_pp_large")
+            k_lat = self.pfloat("k_lat_large")
+            k_theta = self.pfloat("k_theta_large")
+            omega_raw = (
+                k_pp * v_des * curvature_from_error
+                - k_lat * e
+                + theta_term_sign * k_theta * theta
+                - self.pfloat("kd_lat") * self.de_f
+                - self.pfloat("kd_theta") * self.dtheta_f
+            )
+
+        elif lane_change:
+            mode = "lane_change_committed"
+            v_des = clamp(v_base * slow_factor, self.pfloat("v_min"), self.pfloat("v_lane_change_max"))
+            omega_limit = self.pfloat("omega_lane_change_max")
+            k_pp = self.pfloat("k_pp_curve")
+            k_lat = 0.85 * self.pfloat("k_lat_curve")
+            k_theta = 0.85 * self.pfloat("k_theta_curve")
+            omega_raw = (
+                k_pp * v_des * curvature_from_error
+                - k_lat * e
+                + theta_term_sign * k_theta * theta
+                - self.pfloat("kd_lat") * self.de_f
+                - self.pfloat("kd_theta") * self.dtheta_f
+            )
+
+        elif curve:
+            mode = "curve_committed_fast_response"
+            v_des = clamp(v_base * slow_factor, self.pfloat("v_min"), self.pfloat("v_curve_max"))
+            omega_limit = self.pfloat("omega_curve_max")
+            k_pp = self.pfloat("k_pp_curve")
+            k_lat = self.pfloat("k_lat_curve")
+            k_theta = self.pfloat("k_theta_curve")
+            omega_raw = (
+                k_pp * v_des * curvature_from_error
+                - k_lat * e
+                + theta_term_sign * k_theta * theta
+                - self.pfloat("kd_lat") * self.de_f
+                - self.pfloat("kd_theta") * self.dtheta_f
+            )
+
+        else:
+            mode = "mid_cascade_tracking"
+            v_des = clamp(v_base * slow_factor, self.pfloat("v_min"), self.pfloat("v_recover_max"))
+            omega_limit = self.pfloat("omega_mid_max")
+            k_pp = self.pfloat("k_pp_mid")
+            k_lat = self.pfloat("k_lat_mid")
+            k_theta = self.pfloat("k_theta_mid")
+            omega_raw = (
+                k_pp * v_des * curvature_from_error
+                - k_lat * e
+                + theta_term_sign * k_theta * theta
+                - self.pfloat("kd_lat") * self.de_f
+                - self.pfloat("kd_theta") * self.dtheta_f
+            )
+
+        if self.pbool("invert_angular"):
+            omega_raw = -omega_raw
+
+        if abs(omega_raw) < self.pfloat("omega_deadband"):
+            omega_raw = 0.0
+
+        omega_limit = min(abs(omega_limit), self.pfloat("omega_abs_max"))
+        omega_des = clamp(omega_raw, -omega_limit, omega_limit)
+
+        # Avoid sign flip around center.
+        if near and not curve and omega_des * self.omega_ref < 0.0:
+            omega_des = 0.0
+
+        return {
+            "outer_mode": mode,
+            "v_des": v_des,
+            "omega_des": omega_des,
+            "omega_raw": omega_raw,
+            "omega_limit": omega_limit,
+            "curvature_from_error": curvature_from_error,
+            "center_zone": center,
+            "near_zone": near,
+            "large_error": large_error,
+            "lane_change": lane_change,
+            "curve_confirmed": curve,
+            "slow_factor": slow_factor,
+            "k_pp_used": k_pp,
+            "k_lat_used": k_lat,
+            "k_theta_used": k_theta,
+        }
+
+    def lidar_scale(self):
+        if not self.pbool("enable_lidar_safety"):
+            return 1.0, False, "lidar_disabled"
+
+        if not math.isfinite(self.front_min):
+            return 1.0, False, "lidar_no_data"
+
+        emergency = self.pfloat("emergency_distance")
+        stop = self.pfloat("stop_distance")
+        slow = self.pfloat("slow_distance")
+
+        if self.front_min < emergency:
+            return 0.0, True, "lidar_emergency"
+
+        if self.front_min < stop:
+            return 0.0, True, "lidar_stop"
+
+        if self.front_min < slow:
+            ratio = clamp((self.front_min - stop) / max(1e-6, slow - stop), 0.25, 1.0)
+            return ratio, False, "lidar_slow"
+
+        return 1.0, False, "lidar_clear"
+
+    def mix_wheels(self, v_ref, omega_ref, dt):
+        B = max(0.05, self.pfloat("track_width_m"))
+
+        v_ref = clamp(v_ref, 0.0, abs(self.pfloat("v_max_cmd")))
+        omega_ref = clamp(omega_ref, -abs(self.pfloat("omega_max_cmd")), abs(self.pfloat("omega_max_cmd")))
+
+        if abs(omega_ref) < self.pfloat("inner_omega_deadband"):
+            omega_ref = 0.0
+
+        if v_ref <= 0.0:
+            v_left_des = 0.0
+            v_right_des = 0.0
+            mix_mode = "zero"
+        else:
+            abs_w = abs(omega_ref)
+            sign_w = 1.0 if omega_ref > 0.0 else -1.0 if omega_ref < 0.0 else 0.0
+
+            counter_enable = self.pbool("enable_soft_counter_turn")
+            counter_start = abs(self.pfloat("counter_start_omega"))
+            counter_full = max(abs(self.pfloat("counter_full_omega")), counter_start + 1e-3)
+
+            if counter_enable and abs_w >= counter_start and sign_w != 0.0:
+                strength = clamp((abs_w - counter_start) / (counter_full - counter_start), 0.0, 1.0)
+
+                outer_min = self.pfloat("counter_outer_min_mps")
+                outer_max = self.pfloat("counter_outer_max_mps")
+                reverse_max = abs(self.pfloat("counter_reverse_max_mps"))
+
+                outer_speed = clamp(v_ref, outer_min, outer_max)
+                inner_reverse = reverse_max * strength
+
+                if sign_w > 0.0:
+                    v_left_des = -inner_reverse
+                    v_right_des = outer_speed
+                else:
+                    v_left_des = outer_speed
+                    v_right_des = -inner_reverse
+
+                mix_mode = "soft_counter_turn"
+            else:
+                v_left_des = v_ref - omega_ref * B * 0.5
+                v_right_des = v_ref + omega_ref * B * 0.5
+
+                inner_frac = clamp(self.pfloat("same_direction_inner_fraction"), 0.0, 0.95)
+                inner_min_abs = abs(self.pfloat("same_direction_min_inner_mps"))
+
+                if omega_ref > 0.0:
+                    outer = max(v_right_des, inner_min_abs)
+                    inner_min = max(inner_min_abs, outer * inner_frac)
+                    v_left_des = max(v_left_des, inner_min)
+                    v_right_des = outer
+                    mix_mode = "same_direction_left_turn"
+                elif omega_ref < 0.0:
+                    outer = max(v_left_des, inner_min_abs)
+                    inner_min = max(inner_min_abs, outer * inner_frac)
+                    v_right_des = max(v_right_des, inner_min)
+                    v_left_des = outer
+                    mix_mode = "same_direction_right_turn"
+                else:
+                    v_left_des = v_ref
+                    v_right_des = v_ref
+                    mix_mode = "straight"
+
+        lidar_ratio, lidar_stop, lidar_mode = self.lidar_scale()
+
+        if self.emergency_stop:
+            lidar_ratio = 0.0
+            lidar_stop = True
+            lidar_mode = "emergency_stop_topic"
+
+        v_left_des *= lidar_ratio
+        v_right_des *= lidar_ratio
+
+        if abs(v_left_des) >= abs(self.v_left_cmd_prev):
+            left_rate = abs(self.pfloat("wheel_speed_rate"))
+        else:
+            left_rate = abs(self.pfloat("wheel_speed_decel_rate"))
+
+        if abs(v_right_des) >= abs(self.v_right_cmd_prev):
+            right_rate = abs(self.pfloat("wheel_speed_rate"))
+        else:
+            right_rate = abs(self.pfloat("wheel_speed_decel_rate"))
+
+        v_left_cmd = approach(self.v_left_cmd_prev, v_left_des, left_rate * dt)
+        v_right_cmd = approach(self.v_right_cmd_prev, v_right_des, right_rate * dt)
+
+        if lidar_stop or self.emergency_stop:
+            v_left_cmd = 0.0
+            v_right_cmd = 0.0
+
+        self.v_left_cmd_prev = v_left_cmd
+        self.v_right_cmd_prev = v_right_cmd
+
+        v_cmd = 0.5 * (v_left_cmd + v_right_cmd)
+        omega_cmd = (v_right_cmd - v_left_cmd) / B
+
+        if self.pbool("enable_calibration"):
+            linear_scale = max(1e-6, self.pfloat("linear_cmd_scale"))
+            angular_scale = max(1e-6, self.pfloat("angular_cmd_scale"))
+            v_cmd = v_cmd / linear_scale
+            omega_cmd = omega_cmd / angular_scale
+
+        return {
+            "v_left_des": v_left_des,
+            "v_right_des": v_right_des,
+            "v_left_cmd": v_left_cmd,
+            "v_right_cmd": v_right_cmd,
+            "v_cmd": v_cmd,
+            "omega_cmd": omega_cmd,
+            "mix_mode": mix_mode,
+            "lidar_ratio": lidar_ratio,
+            "lidar_stop": lidar_stop,
+            "lidar_mode": lidar_mode,
+        }
+
+    def cmd_vel_conflict_detected(self):
+        if not self.pbool("check_cmd_vel_conflict"):
+            return False, []
+
+        if self.pbool("allow_cmd_vel_conflict"):
+            return False, []
+
+        infos = self.get_publishers_info_by_topic(self.cmd_vel_topic)
+        names = []
+
+        for info in infos:
+            if info.node_namespace == "/":
+                names.append(info.node_name)
+            else:
+                names.append(f"{info.node_namespace}/{info.node_name}")
+
+        # This node itself is one publisher. More than one means conflict.
+        if self.cmd_vel_topic == "/cmd_vel" and len(infos) > 1:
+            return True, names
+
+        return False, names
+
+    def maybe_publish_cmd(self, v, omega):
+        enabled = self.is_enabled()
+        conflict, publishers = self.cmd_vel_conflict_detected()
+
+        if not enabled:
+            return False, conflict, publishers, "enable_cmd_false"
+
+        if conflict:
+            if self.pbool("publish_zero_on_conflict"):
+                self.cmd_pub.publish(self.make_twist(0.0, 0.0))
+            return False, conflict, publishers, "cmd_vel_conflict"
+
+        self.cmd_pub.publish(self.make_twist(v, omega))
+        return True, conflict, publishers, "published"
+
+    def control_loop(self):
+        now = self.now_s()
+        dt = max(now - self.prev_loop_time, 1e-3)
+        self.prev_loop_time = now
+
+        age = now - self.last_error_time if self.last_error_time > 0.0 else 999.0
+        fresh = self.raw_valid and age <= self.pfloat("error_timeout_s")
+        startup = self.first_valid_time > 0.0 and (now - self.first_valid_time) <= self.pfloat("startup_straight_s")
+        jump_hold = now < self.jump_hold_until
+
+        e_used = 0.0
+        theta_used = 0.0
+
+        outer = {
+            "outer_mode": "none",
+            "v_des": 0.0,
+            "omega_des": 0.0,
+            "omega_raw": 0.0,
+            "omega_limit": 0.0,
+            "curvature_from_error": 0.0,
+            "center_zone": False,
+            "near_zone": False,
+            "large_error": False,
+            "lane_change": False,
+            "curve_confirmed": False,
+            "slow_factor": 1.0,
+            "k_pp_used": 0.0,
+            "k_lat_used": 0.0,
+            "k_theta_used": 0.0,
+        }
+
+        if jump_hold:
+            e_used, theta_used = self.filtered_error(dt, False)
+            mode = "jump_guard_straight"
+            v_des = self.pfloat("v_jump_hold")
+            omega_des = 0.0
+            outer["outer_mode"] = mode
+
+        elif startup:
+            e_used, theta_used = self.filtered_error(dt, True)
+            mode = "startup_straight"
+            v_des = min(self.speed_from_fps(), self.pfloat("startup_v"))
+            omega_des = 0.0
+            outer["outer_mode"] = mode
+
+        elif fresh:
+            e_used, theta_used = self.filtered_error(dt, True)
+            outer = self.compute_outer(e_used, theta_used)
+            mode = outer["outer_mode"]
+            v_des = outer["v_des"]
+            omega_des = outer["omega_des"]
+
+        elif age <= self.pfloat("blind_hold_s"):
+            e_used, theta_used = self.filtered_error(dt, False)
+            mode = "blind_straight_hold"
+            v_des = self.pfloat("v_blind")
+            omega_des = 0.0
+            outer["outer_mode"] = mode
+
+        else:
+            e_used, theta_used = self.filtered_error(dt, False)
+            mode = "control_error_timeout"
+            v_des = 0.0
+            omega_des = 0.0
+            outer["outer_mode"] = mode
+
+        if v_des >= self.v_ref:
+            v_rate = self.pfloat("v_rate_up")
+        else:
+            v_rate = self.pfloat("v_rate_down")
+
+        if mode in ["center_cruise", "near_center_cascade", "startup_straight", "blind_straight_hold", "jump_guard_straight"]:
+            omega_rate = self.pfloat("omega_rate_center")
+        elif mode in ["curve_committed_fast_response", "lane_change_committed"]:
+            omega_rate = self.pfloat("omega_rate_curve")
+        else:
+            omega_rate = self.pfloat("omega_rate_mid")
+
+        self.v_ref = approach(self.v_ref, v_des, v_rate * dt)
+        self.omega_ref = approach(self.omega_ref, omega_des, omega_rate * dt)
+
+        self.publish_ref(self.v_ref, self.omega_ref)
+
+        inner = self.mix_wheels(self.v_ref, self.omega_ref, dt)
+
+        self.v_cmd = inner["v_cmd"]
+        self.omega_cmd = inner["omega_cmd"]
+
+        if mode == "control_error_timeout":
+            self.v_cmd = 0.0
+            self.omega_cmd = 0.0
+
+        cmd_published, conflict, publishers, publish_reason = self.maybe_publish_cmd(self.v_cmd, self.omega_cmd)
+
+        B = max(0.05, self.pfloat("track_width_m"))
+        v_left_odom = self.odom_v - self.odom_omega * B * 0.5
+        v_right_odom = self.odom_v + self.odom_omega * B * 0.5
+        odom_timeout = self.last_odom_time < 0.0 or (now - self.last_odom_time) > 1.5
+
+        self.publish_state({
+            "node": "cascade_controller_v1",
+            "version": "cascade_controller_v1_optimize_vision",
+
+            "time": now,
+            "enabled": self.is_enabled(),
+            "param_enable_cmd": self.pbool("enable_cmd"),
+            "runtime_enable": self.runtime_enable,
+            "emergency_stop": self.emergency_stop,
+
+            "cmd_published": cmd_published,
+            "publish_reason": publish_reason,
+            "cmd_vel_conflict": conflict,
+            "cmd_vel_publishers": publishers,
+
+            "mode": mode,
+            "outer_mode": outer["outer_mode"],
+            "mix_mode": inner["mix_mode"],
+
+            "raw_valid": self.raw_valid,
+            "raw_valid_reason": self.raw_valid_reason,
+            "lane_state": self.raw_lane_state,
+            "confidence": self.raw_confidence,
+            "error_age_s": age,
+
+            "intent_hint": self.intent_hint,
+            "trajectory_hint": self.trajectory_hint,
+            "planner_status_hint": self.planner_status_hint,
+            "lane_state_debug_age_s": now - self.last_lane_state_time if self.last_lane_state_time > 0 else -1.0,
+
+            "jump_hold": jump_hold,
+            "jump_reason": self.jump_reason,
+
+            "fps_est": self.fps_est,
+
+            "epsilon_x_mm": self.raw_e_lat * 1000.0,
+            "theta_rad": self.raw_e_theta,
+            "lookahead_m": self.raw_lookahead,
+            "kappa_m": self.raw_kappa,
+
+            "e_f_m": self.e_f,
+            "e_f_mm": self.e_f * 1000.0,
+            "theta_f_rad": self.theta_f,
+            "e_used_m": e_used,
+            "e_used_mm": e_used * 1000.0,
+            "theta_used_rad": theta_used,
+            "de_f": self.de_f,
+            "dtheta_f": self.dtheta_f,
+
+            "curve_confirmed": outer["curve_confirmed"],
+            "curve_count": self.curve_count,
+            "curve_sign": self.curve_sign,
+            "center_zone": outer["center_zone"],
+            "near_zone": outer["near_zone"],
+            "large_error": outer["large_error"],
+            "lane_change": outer["lane_change"],
+
+            "curvature_from_error": outer["curvature_from_error"],
+            "slow_factor": outer["slow_factor"],
+            "k_pp_used": outer["k_pp_used"],
+            "k_lat_used": outer["k_lat_used"],
+            "k_theta_used": outer["k_theta_used"],
+
+            "v_des": v_des,
+            "omega_des": omega_des,
+            "omega_raw": outer["omega_raw"],
+            "omega_limit": outer["omega_limit"],
+            "v_ref": self.v_ref,
+            "omega_ref": self.omega_ref,
+
+            "v_left_des": inner["v_left_des"],
+            "v_right_des": inner["v_right_des"],
+            "v_left_cmd": inner["v_left_cmd"],
+            "v_right_cmd": inner["v_right_cmd"],
+            "v_cmd": self.v_cmd,
+            "omega_cmd": self.omega_cmd,
+
+            "odom_v": self.odom_v,
+            "odom_omega": self.odom_omega,
+            "v_left_odom": v_left_odom,
+            "v_right_odom": v_right_odom,
+            "odom_timeout": odom_timeout,
+
+            "odom_x": self.odom_x,
+            "odom_y": self.odom_y,
+            "odom_yaw": self.odom_yaw,
+
+            "front_min_m": self.front_min if math.isfinite(self.front_min) else None,
+            "lidar_ratio": inner["lidar_ratio"],
+            "lidar_stop": inner["lidar_stop"],
+            "lidar_mode": inner["lidar_mode"],
+        })
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = CascadeControllerV1()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if bool(node.get_parameter("always_publish_stop_on_exit").value):
+            node.get_logger().warn("Shutdown: force stop burst to cmd_vel")
+            node.publish_stop_burst()
+
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

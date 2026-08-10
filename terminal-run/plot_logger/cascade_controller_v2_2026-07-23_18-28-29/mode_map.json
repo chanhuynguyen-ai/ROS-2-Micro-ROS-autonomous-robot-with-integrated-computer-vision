@@ -1,0 +1,9 @@
+{
+  "controller_mode": {},
+  "outer_mode": {},
+  "mix_mode": {},
+  "lidar_mode": {},
+  "intent_hint": {},
+  "trajectory_hint": {},
+  "planner_status_hint": {}
+}

@@ -1,0 +1,97 @@
+[
+  {
+    "timestamp_ms": 1000,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]},
+      {"id": "turn_lane_right", "label": 20, "class_name": "turn-lane", "confidence": 0.85, "waypoints": [], "longitudinal_offset_mm": 450.0, "lookahead_x_mm": 520.0, "lookahead_d_mm": 450.0, "lookahead_theta_rad": 0.55}
+    ]
+  },
+  {
+    "timestamp_ms": 1100,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]},
+      {"id": "turn_lane_right", "label": 20, "class_name": "turn-lane", "confidence": 0.85, "waypoints": [], "longitudinal_offset_mm": 420.0, "lookahead_x_mm": 520.0, "lookahead_d_mm": 420.0, "lookahead_theta_rad": 0.55}
+    ]
+  },
+  {
+    "timestamp_ms": 1200,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 1300,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 1400,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 1500,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]},
+      {"id": "turn_lane_right", "label": 20, "class_name": "turn-lane", "confidence": 0.85, "waypoints": [], "longitudinal_offset_mm": 390.0, "lookahead_x_mm": 520.0, "lookahead_d_mm": 390.0, "lookahead_theta_rad": 0.55}
+    ]
+  },
+  {
+    "timestamp_ms": 1600,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]},
+      {"id": "turn_lane_right", "label": 20, "class_name": "turn-lane", "confidence": 0.85, "waypoints": [], "longitudinal_offset_mm": 360.0, "lookahead_x_mm": 520.0, "lookahead_d_mm": 360.0, "lookahead_theta_rad": 0.55}
+    ]
+  },
+  {
+    "timestamp_ms": 1700,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 1800,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 1900,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 2000,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 2100,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 2200,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 2300,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]}
+    ]
+  },
+  {
+    "timestamp_ms": 2400,
+    "objects": [
+      {"id": "main_lane", "label": 6, "class_name": "main-lane", "confidence": 0.9, "waypoints": [[0.0, 0.0], [0.0, 1000.0], [0.0, 2000.0], [0.0, 3000.0]]},
+      {"id": "turn_lane_right", "label": 20, "class_name": "turn-lane", "confidence": 0.85, "waypoints": [], "longitudinal_offset_mm": 330.0, "lookahead_x_mm": 520.0, "lookahead_d_mm": 330.0, "lookahead_theta_rad": 0.55}
+    ]
+  }
+]

@@ -1,0 +1,124 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-e6d718ca14dfafa97421.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "avs_perception",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "avs_perception_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-avs_perception_uninstall-Release-e4de174770b0ac4d83c3.json",
+					"name" : "avs_perception_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "control_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-control_node-Release-167f7eced097b822b28b.json",
+					"name" : "control_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ipm_transform_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ipm_transform_node-Release-c87dccb42b81fe7e63e2.json",
+					"name" : "ipm_transform_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ncnn_inference_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ncnn_inference_node-Release-c54aed27fa207a33689f.json",
+					"name" : "ncnn_inference_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Release-5a46cf71c2c8bd993d24.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "video_publisher_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-video_publisher_node-Release-66dbf60c718d3ede937b.json",
+					"name" : "video_publisher_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "video_test_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-video_test_node-Release-a37b814d2db7d3e934d0.json",
+					"name" : "video_test_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "yolo26_seg_lib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-yolo26_seg_lib-Release-75d13f856630bab73478.json",
+					"name" : "yolo26_seg_lib",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/goln/SimpleSysIDV/ros2_ws/build_host/avs_perception",
+		"source" : "/home/goln/SimpleSysIDV/ros2_ws/src/avs_perception"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

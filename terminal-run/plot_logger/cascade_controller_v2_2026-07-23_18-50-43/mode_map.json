@@ -1,0 +1,25 @@
+{
+  "controller_mode": {
+    "1": "cascade_pd_tracking"
+  },
+  "outer_mode": {
+    "1": "follow_main"
+  },
+  "mix_mode": {
+    "1": "inner_wheel_pd"
+  },
+  "lidar_mode": {
+    "1": "lidar_disabled"
+  },
+  "intent_hint": {
+    "1": "FOLLOW_MAIN"
+  },
+  "trajectory_hint": {
+    "1": "COMMITTED"
+  },
+  "planner_status_hint": {
+    "1": "HOLD",
+    "2": "UNKNOWN",
+    "3": "DROPOUT"
+  }
+}

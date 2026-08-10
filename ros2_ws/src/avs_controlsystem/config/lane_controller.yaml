@@ -1,0 +1,20 @@
+lane_backstepping_pd:
+  ros__parameters:
+    v_max: 0.20
+    v_min: 0.06
+    omega_max: 1.0
+    k_y: 1.5
+    k_heading: 2.0
+    kd_heading: 0.10
+    kd_y: 0.04
+    lost_timeout: 0.5
+    search_omega: 0.20
+
+lane_parser_node:
+  ros__parameters:
+    image_width: 640.0
+    image_height: 480.0
+    target_class: "main-lane"
+    lookahead_ratio: 0.70
+    near_ratio: 0.85
+    min_points: 8

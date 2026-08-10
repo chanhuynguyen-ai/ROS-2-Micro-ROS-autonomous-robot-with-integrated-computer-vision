@@ -1,0 +1,126 @@
+lane_outer_pd_node:
+  ros__parameters:
+    control_error_topic: "/avs/control_error"
+    secondary_control_error_topic: "/control_error"
+    lane_ref_topic: "/avs/lane_ref_cmd"
+    lane_state_topic: "/avs/lane_pd_state"
+
+    outer_hz: 25.0
+    outer_timeout_s: 2.0
+    stale_hold_s: 0.55
+
+    fps_init: 4.0
+    fps_min: 0.8
+    fps_max: 20.0
+    fps_tau_s: 0.8
+
+    target_distance_per_frame_m: 0.020
+
+    v_max: 0.105
+    v_min: 0.045
+    v_turn_min: 0.055
+    v_intersection: 0.045
+
+    omega_max: 0.62
+
+    lookahead_default_m: 0.42
+    lookahead_min_m: 0.22
+    lookahead_max_m: 0.85
+
+    x_deadband_m: 0.018
+    theta_deadband_rad: 0.018
+
+    x_bias_m: 0.0
+
+    max_abs_e_lat_m: 0.42
+    max_abs_theta_rad: 0.90
+    min_valid_lookahead_m: 0.18
+    intersection_hold_s: 1.20
+
+    error_filter_tau_s: 0.28
+    derivative_filter_tau_s: 0.50
+
+    k_pp: 1.75
+    k_lat: 0.62
+    kd_lat: 0.008
+    k_theta: 0.18
+    kd_theta: 0.004
+
+    k_slow_lat: 1.50
+    k_slow_theta: 0.55
+    k_slow_curvature: 0.040
+
+    v_ref_rate: 0.16
+    omega_ref_rate: 0.95
+
+    min_confidence: 0.0
+    invert_angular: false
+
+    test_mode: false
+    test_hz: 4.0
+    test_e_lat_amp_m: 0.08
+    test_e_theta_amp_rad: 0.05
+
+wheel_inner_pd_node:
+  ros__parameters:
+    lane_ref_topic: "/avs/lane_ref_cmd"
+    odom_topic: "/odom_raw"
+    scan_topic: "/scan"
+    cmd_vel_topic: "/cmd_vel"
+    wheel_state_topic: "/avs/wheel_pd_state"
+
+    runtime_enable_topic: "/avs/cascade_enable_cmd"
+    emergency_stop_topic: "/avs/cascade_emergency_stop"
+
+    inner_hz: 50.0
+    ref_timeout_s: 2.0
+    odom_timeout_s: 1.5
+
+    track_width_m: 0.135
+    wheel_radius_m: 0.0225
+
+    v_max_cmd: 0.12
+    omega_max_cmd: 0.70
+
+    wheel_speed_rate: 0.18
+    wheel_speed_decel_rate: 0.35
+    same_direction_inner_fraction: 0.42
+
+    enable_soft_counter_turn: true
+    counter_start_omega: 0.32
+    counter_full_omega: 0.72
+    counter_outer_min_mps: 0.040
+    counter_outer_max_mps: 0.065
+    counter_reverse_max_mps: 0.014
+    same_direction_min_inner_mps: 0.020
+
+    omega_deadband: 0.018
+
+    enable_calibration: false
+    linear_cmd_scale: 1.245
+    angular_cmd_scale: 0.75
+
+    enable_cmd: false
+
+    enable_lidar_safety: true
+    emergency_distance: 0.18
+    stop_distance: 0.32
+    slow_distance: 0.70
+    front_angle_deg: 35.0
+
+    always_publish_stop_on_exit: true
+    stop_burst_count: 40
+    stop_burst_dt: 0.03
+
+cascade_control_monitor_node:
+  ros__parameters:
+    control_error_topic: "/avs/control_error"
+    lane_ref_topic: "/avs/lane_ref_cmd"
+    lane_state_topic: "/avs/lane_pd_state"
+    wheel_state_topic: "/avs/wheel_pd_state"
+    cmd_vel_topic: "/cmd_vel"
+    odom_topic: "/odom_raw"
+    scan_topic: "/scan"
+    cascade_state_topic: "/avs/cascade_control_state"
+    monitor_hz: 10.0
+    front_angle_deg: 35.0

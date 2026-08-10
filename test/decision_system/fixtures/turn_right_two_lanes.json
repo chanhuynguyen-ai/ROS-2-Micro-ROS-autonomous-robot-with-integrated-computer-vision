@@ -1,0 +1,28 @@
+[
+  {
+    "timestamp_ms": 1000,
+    "objects": [
+      {
+        "id": "main_lane",
+        "label": 6,
+        "class_name": "main-lane",
+        "confidence": 0.9,
+        "waypoints": [[0.0, 0.0], [0.0, 500.0], [0.0, 1000.0]]
+      },
+      {
+        "id": "turn_lane_closer",
+        "label": 20,
+        "class_name": "turn-lane",
+        "confidence": 0.8,
+        "waypoints": [[300.0, 500.0], [600.0, 800.0], [900.0, 1000.0]]
+      },
+      {
+        "id": "turn_lane_further",
+        "label": 20,
+        "class_name": "turn-lane",
+        "confidence": 0.85,
+        "waypoints": [[600.0, 500.0], [900.0, 800.0], [1200.0, 1000.0]]
+      }
+    ]
+  }
+]

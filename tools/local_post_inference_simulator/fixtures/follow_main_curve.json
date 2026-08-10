@@ -1,0 +1,53 @@
+{
+  "name": "follow_main_curve",
+  "canvas": {
+    "width": 640,
+    "height": 480
+  },
+  "calibration": {
+    "source": "config/calibration.json"
+  },
+  "route_intent": {
+    "intent": "follow_main",
+    "seq": 101
+  },
+  "frames": [
+    {
+      "frame_id": 1,
+      "objects": [
+        {
+          "id": "fmc_main_lane_curve",
+          "class_name": "main-lane",
+          "label": 6,
+          "shape": "polygon",
+          "points_px": [[250, 470], [390, 470], [460, 220], [520, 120], [420, 120], [360, 220]],
+          "confidence": 1.0
+        },
+        {
+          "id": "fmc_solid_white_1",
+          "class_name": "solid-white",
+          "label": 16,
+          "shape": "polyline",
+          "points_px": [[390, 470], [460, 220], [520, 120]],
+          "confidence": 0.95
+        },
+        {
+          "id": "fmc_solid_yellow_1",
+          "class_name": "solid-yellow",
+          "label": 17,
+          "shape": "polyline",
+          "points_px": [[250, 470], [360, 220], [420, 120]],
+          "confidence": 0.95
+        }
+      ]
+    }
+  ],
+  "assertions": {
+    "expected_selected_lane": "fmc_main_lane_curve",
+    "max_lane_switch_count": 0,
+    "max_jitter_epsilon_x_mm": 50.0,
+    "max_jitter_theta_rad": 0.1,
+    "expected_blocked_state": false,
+    "expected_trajectory_kind": "follow_main"
+  }
+}

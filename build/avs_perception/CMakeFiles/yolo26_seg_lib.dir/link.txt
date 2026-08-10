@@ -1,0 +1,2 @@
+/usr/bin/ar qc libyolo26_seg_lib.a CMakeFiles/yolo26_seg_lib.dir/src/yolo26_seg.cpp.o
+/usr/bin/ranlib libyolo26_seg_lib.a

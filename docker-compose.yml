@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  avs_perception:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: avs_perception:latest
+    container_name: avs_perception_container
+    network_mode: host
+    ipc: host
+    privileged: true
+    volumes:
+      # Bind mount workspace, models, and test videos
+      - ./ros2_ws:/workspace/ros2_ws
+      - ./models:/workspace/models
+      - ./test:/workspace/test
+      - ./config:/workspace/config
+    environment:
+      - ROS_DOMAIN_ID=20
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    command: bash -c "cd /workspace/ros2_ws && rm -rf build install log && colcon build --symlink-install && source install/setup.bash && (ros2 run avs_perception ncnn_inference_node & ros2 run avs_perception ipm_transform_node & ros2 run avs_perception control_node)"
+
+  video_publisher:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: avs_perception:latest
+    container_name: video_publisher_container
+    network_mode: host
+    ipc: host
+    privileged: true
+    volumes:
+      - /dev:/dev
+      - ./ros2_ws:/workspace/ros2_ws
+      - ./test:/workspace/test
+      - ./config:/workspace/config
+    environment:
+      - ROS_DOMAIN_ID=20
+    command: bash -c "while [ -f /workspace/ros2_ws/install/setup.bash ]; do echo 'Waiting for old build to be cleared...'; sleep 1; done && while [ ! -f /workspace/ros2_ws/install/setup.bash ]; do echo 'Waiting for build completion...'; sleep 2; done && while [ ! -f /workspace/ros2_ws/install/avs_perception/lib/avs_perception/video_publisher_node ]; do echo 'Waiting for video_publisher_node...'; sleep 2; done && cd /workspace/ros2_ws && source install/setup.bash && ros2 run avs_perception video_publisher_node"
+
+  web_dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: avs_perception:latest
+    container_name: web_dashboard_container
+    network_mode: host
+    ipc: host
+    volumes:
+      - ./ros2_ws:/workspace/ros2_ws
+      - ./web_dashboard:/workspace/web_dashboard
+      - ./test:/workspace/test
+      - ./config:/workspace/config
+    environment:
+      - ROS_DOMAIN_ID=20
+    ports:
+      - "8000:8000"
+    command: python3 /workspace/web_dashboard/backend/main.py

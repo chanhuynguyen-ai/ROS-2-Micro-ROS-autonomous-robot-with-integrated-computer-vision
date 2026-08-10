@@ -1,0 +1,38 @@
+from setuptools import setup, find_packages
+
+package_name = 'avs_controlsystem'
+
+setup(
+    name=package_name,
+    version='0.0.0',
+    packages=find_packages(),
+    data_files=[
+        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
+        ('share/' + package_name, ['package.xml']),
+    ],
+    install_requires=['setuptools'],
+    zip_safe=True,
+    maintainer='avs',
+    maintainer_email='avs@example.com',
+    description='AVS control system for lane following',
+    license='MIT',
+    tests_require=['pytest'],
+    entry_points={
+        'console_scripts': [
+            'main_following_pd = avs_controlsystem.main_following_pd_node:main',
+            'pur_persuit_pd_mainlane_record = avs_controlsystem.pur_persuit_pd_mainlane_record:main',
+            'pur_persuit_pd_mainlane_video_logger = avs_controlsystem.pur_persuit_pd_mainlane_video_logger:main',
+            'pur_persuit_pd_mainlane_following_logger = avs_controlsystem.pur_persuit_pd_mainlane_following_logger:main',
+            'start_turn_pur_persuit_pd_following = avs_controlsystem.start_turn_pur_persuit_pd_following:main',
+            'pur_persuit_pd_mainlane_following = avs_controlsystem.pur_persuit_pd_mainlane_following:main',
+            'pur_persuit_mainlane_following = avs_controlsystem.pur_persuit_mainlane_following:main',
+            'mainlane_following_controlerror = avs_controlsystem.mainlane_following_controlerror:main',
+            'safe_error_cmdvel_node = avs_controlsystem.safe_error_cmdvel_node:main',
+            'avs_lane_cmdvel_node = avs_controlsystem.avs_lane_cmdvel_node:main',
+            'lane_parser_node = avs_controlsystem.lane_parser_node:main',
+            'drive_record_node = avs_controlsystem.drive_record_node:main',
+            'lane_lidar_follower_node = avs_controlsystem.lane_lidar_follower_node:main',
+            'smooth_lane_lidar_follower_node = avs_controlsystem.smooth_lane_lidar_follower_node:main',
+        ],
+    },
+)

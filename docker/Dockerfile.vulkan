@@ -1,0 +1,82 @@
+FROM ros:humble-ros-base
+
+# Benchmark-only image for Pha D (Vulkan) — avs_perception:arm64-vulkan.
+# Differs from docker/Dockerfile (production, CPU-only) in two ways:
+#
+# 1. Mesa from ppa:kisak/turtle: jammy's stock Mesa 23.2 has no V3DV support
+#    for the Pi 5 GPU (VideoCore VII / V3D 7.1 — needs Mesa >= 23.3). The PPA
+#    provides Mesa 25.x arm64 for jammy, giving a working Vulkan ICD inside
+#    the container regardless of the (older) Mesa on the Pi host OS. Only the
+#    host KERNEL v3d driver is required (/dev/dri must exist on the Pi).
+#
+# 2. NCNN pinned to the same commit as ncnn-src/ on the laptop (master with
+#    Vulkan fixes, used for Pha D experiments) and built with NCNN_VULKAN=ON.
+#    Production stays on 20240820/CPU — when comparing Vulkan vs CPU, re-run
+#    the CPU presets (b1/b2) inside THIS image too so both sides use the same
+#    NCNN version (see docs/optimize/pi_benchmark_guide.md §13).
+#    NCNN_SIMPLEVK (default ON) bundles an in-house Vulkan loader, so no
+#    Vulkan SDK is needed at build time; libvulkan1 is dlopen'd at runtime.
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    pkg-config \
+    libopencv-dev \
+    python3-opencv \
+    ros-humble-cv-bridge \
+    ros-humble-image-transport \
+    libomp-dev \
+    protobuf-compiler \
+    libprotobuf-dev \
+    python3-pip \
+    software-properties-common \
+    && add-apt-repository -y ppa:kisak/turtle \
+    && apt-get update && apt-get install -y \
+    libvulkan1 \
+    mesa-vulkan-drivers \
+    vulkan-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pin the Vulkan ICD to the Pi 5 GPU driver so NCNN can never silently fall
+# back to llvmpipe (CPU software Vulkan) and mislabel CPU results as GPU.
+ENV VK_DRIVER_FILES=/usr/share/vulkan/icd.d/broadcom_icd.aarch64.json \
+    VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/broadcom_icd.aarch64.json
+
+# Clone and build NCNN at the pinned commit with Vulkan enabled.
+# glslang submodule is required to compile the SPIR-V shaders (this makes the
+# build noticeably longer than the CPU image, especially under QEMU).
+ARG NCNN_COMMIT=b16501a65edf03828dae55b4d20ccc6a6bf4a3b4
+WORKDIR /tmp
+RUN git init ncnn && cd ncnn && \
+    git remote add origin https://github.com/Tencent/ncnn.git && \
+    git fetch --depth 1 origin ${NCNN_COMMIT} && \
+    git checkout FETCH_HEAD && \
+    git submodule update --init glslang && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DNCNN_VULKAN=ON \
+          -DNCNN_BUILD_EXAMPLES=OFF \
+          -DNCNN_BUILD_TOOLS=OFF \
+          -DNCNN_BUILD_BENCHMARK=OFF \
+          -DNCNN_SHARED_LIB=ON \
+          .. && \
+    make -j$(nproc) && \
+    make install && \
+    cd /tmp && rm -rf ncnn
+
+# Set up workspace
+WORKDIR /workspace
+
+# Copy ROS2 workspace
+COPY ros2_ws /workspace/ros2_ws
+
+# Setup entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["bash"]

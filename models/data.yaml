@@ -1,0 +1,33 @@
+names:
+- dashed-white
+- dashed-yellow
+- double-solid-white
+- light_green
+- light_red
+- light_yellow
+- main-lane
+- other-lane
+- parking-zone
+- sign-no-left
+- sign-no-parking
+- sign-no-right
+- sign-parking
+- sign-stop
+- sign-turn-left
+- sign-turn-right
+- solid-white
+- solid-yellow
+- start
+- stop-line
+- turn-lane
+- vehicle
+nc: 22
+roboflow:
+  license: MIT
+  project: computervisionrospi5-all-classes-smooth-v3-full
+  url: https://universe.roboflow.com/computervisionrospi5/computervisionrospi5-all-classes-smooth-v3-full/dataset/12
+  version: 12
+  workspace: computervisionrospi5
+test: ../test/images
+train: /kaggle/working/train/images
+val: /kaggle/working/valid/images

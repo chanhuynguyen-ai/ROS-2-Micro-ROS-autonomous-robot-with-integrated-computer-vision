@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp_ms": 1000,
+    "objects": [
+      {
+        "id": "main_lane_curve",
+        "label": 6,
+        "class_name": "main-lane",
+        "confidence": 0.95,
+        "waypoints": [[0.0, 0.0], [50.0, 1000.0], [200.0, 2000.0], [450.0, 3000.0], [800.0, 4000.0]]
+      }
+    ]
+  }
+]
