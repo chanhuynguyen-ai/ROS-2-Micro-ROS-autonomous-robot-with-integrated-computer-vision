@@ -1,276 +1,246 @@
 <div align="center">
 
-# 🤖 ROS 2 Autonomous Vision Robot
+# ROS 2 Autonomous Vision Robot
 
-### Autonomous Robot with ROS 2, Computer Vision, NCNN and micro-ROS
+### ROS 2 / micro-ROS autonomous robot with real-time vision, lane geometry and closed-loop control
 
-![ROS 2](https://img.shields.io/badge/ROS%202-Humble-22314E?logo=ros)
-![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus)
-![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?logo=opencv)
-![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker)
-![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi%205-Edge%20AI-A22846?logo=raspberrypi)
+[![ROS 2](https://img.shields.io/badge/ROS%202-Humble-22314E?logo=ros&logoColor=white)](https://docs.ros.org/en/humble/)
+[![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus&logoColor=white)](https://isocpp.org/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
+[![NCNN](https://img.shields.io/badge/NCNN-Edge%20Inference-F37626)](https://github.com/Tencent/ncnn)
+[![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-5-A22846?logo=raspberrypi&logoColor=white)](https://www.raspberrypi.com/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
-**A ROS 2 autonomous robotics platform integrating real-time computer vision, edge AI inference, control algorithms and embedded hardware.**
+**Graduation project:** *Development of a ROS 2/micro-ROS Autonomous Robot Car Platform Integrated with Computer Vision for a Miniature Urban Model.*
+
+<img src="docs/images/robot_on_testbed.png" alt="Autonomous robot on miniature urban testbed" width="780" />
 
 </div>
 
 ---
 
-## 🚀 Overview
+## Overview
 
-This project develops an autonomous mobile robot using **ROS 2 Humble**, **OpenCV**, **NCNN**, **Raspberry Pi 5**, and **ESP32 / micro-ROS**.
+This project develops a **model-scale autonomous robot car** on the **MicroROS-Car-Pi5** platform. A **Raspberry Pi 5** runs the high-level ROS 2 perception, geometry, control, dashboard and logging stack, while an **ESP32-S3** provides low-level hardware integration through **micro-ROS**.
 
-The system processes camera input, performs road and lane segmentation, estimates navigation information, applies autonomous control algorithms, and sends motion commands toward the embedded controller.
+The perception pipeline converts camera images into control-ready geometric information using **YOLO26n-seg + NCNN**, **Homography/IPM**, centerline extraction and waypoint generation. The robot is evaluated with **PD**, **Backstepping-PD** and **Cascade PD** lane-following controllers, with **LiDAR-based slowdown and emergency stopping**.
 
-The main goal is to build a complete robotics pipeline rather than a standalone AI model:
+> **Scope:** designed and validated on an indoor miniature urban testbed for robotics research and education - not for real-road autonomous driving.
 
-```text
-Camera
-  ↓
-Computer Vision
-  ↓
-NCNN Segmentation
-  ↓
-Lane / Road Understanding
-  ↓
-IPM + Navigation Error
-  ↓
-Controller
-  ↓
-ROS 2 Motion Command
-  ↓
-micro-ROS
-  ↓
-ESP32
-  ↓
-Motor / Steering
-```
-
----
-
-## ✨ Key Features
-
-* ROS 2 Humble modular architecture
-* Real-time camera and video processing
-* Lane and road segmentation
-* NCNN CPU inference
-* OpenCV image processing
-* Inverse Perspective Mapping
-* Multiple autonomous control algorithms
-* Raspberry Pi 5 edge deployment
-* ESP32 / micro-ROS architecture
-* Docker-based development environment
-
----
-
-## 🏗️ Architecture
+## System Architecture
 
 ```mermaid
 flowchart LR
+    CAM[Camera] --> VP[video_publisher_node]
+    VP --> AI[YOLO26n-seg / NCNN]
+    AI --> PIX["/avs/telemetry"]
+    PIX --> IPM[Homography / IPM]
+    IPM --> GEO[Centerline + Waypoint]
+    GEO --> ERR["/avs/control_error"]
+    ERR --> CTRL[PD / Backstepping-PD / Cascade PD]
 
-CAM["📷 Camera"]
-AI["🧠 NCNN Vision"]
-IPM["IPM"]
-CTRL["🎛️ Controller"]
-ROS["ROS 2 Command"]
-MCU["ESP32"]
-MOTOR["⚙️ Motor"]
+    LIDAR["LiDAR /scan"] --> SAFE[Safety Layer]
+    CTRL --> SAFE
+    SAFE --> CMD["/cmd_vel"]
+    CMD --> UROS[micro-ROS]
+    UROS --> ESP[ESP32-S3]
+    ESP --> ACT[Motors / Actuators]
 
-CAM --> AI
-AI --> IPM
-IPM --> CTRL
-CTRL --> ROS
-ROS --> MCU
-MCU --> MOTOR
+    IMU[IMU + Odometry] --> CTRL
+    AI --> DASH[Web Dashboard / Logging]
+    IPM --> DASH
+    CTRL --> DASH
 ```
 
----
+### Core data flow
 
-## 👁️ Computer Vision
+`Camera -> Segmentation -> Polygon -> IPM -> Centerline/Waypoint -> Geometric Error -> Controller -> /cmd_vel -> micro-ROS -> Robot`
 
-The perception system is designed for navigation-oriented road understanding.
+## Computer Vision Pipeline
 
-Supported concepts include:
+The **AVS (Autonomous Vision System)** is organized as independent ROS 2 nodes so that each stage can be tested and debugged separately:
+
+- `video_publisher_node` - camera/video acquisition.
+- `ncnn_inference_node` - YOLO segmentation and pixel-space telemetry.
+- `ipm_transform_node` - pixel-to-world transformation using Homography/IPM.
+- `control_node` - vision geometry post-processing and `/avs/control_error` generation.
+- `video_test_node` - offline testing, FPS and latency evaluation.
+
+The segmentation dataset contains **19 classes**, including lane surfaces, road markings, stop lines, parking regions, vehicles and traffic-related objects.
+
+<table>
+<tr>
+<td width="50%" align="center">
+<img src="docs/images/segmentation_dashboard.png" alt="YOLO segmentation dashboard" width="100%" /><br/>
+<b>YOLO segmentation + live telemetry</b>
+</td>
+<td width="50%" align="center">
+<img src="docs/images/ipm_birds_eye_view.png" alt="Bird's-eye view after IPM" width="100%" /><br/>
+<b>Real-world Bird's Eye View after IPM</b>
+</td>
+</tr>
+</table>
+
+## Model Results
+
+The reported YOLO26n-seg model was trained on a **Kaggle T4 GPU** with 320x320 input images. Training stopped at epoch 260 through early stopping; the best model is approximately **6.6 MB**, with **2.69M parameters** and about **9.0 GFLOPs**.
+
+| Validation metric | Bounding box | Segmentation mask |
+|---|---:|---:|
+| Precision | 0.850 | **0.831** |
+| Recall | 0.794 | **0.783** |
+| mAP@0.5 | 0.850 | **0.823** |
+| mAP@0.5:0.95 | 0.681 | **0.548** |
+
+Additional reported results:
+
+- Validation set: **993 images / 7,500 instances / 19 classes**.
+- `main-lane` mask mAP@0.5: approximately **0.991**.
+- `other-lane` mask mAP@0.5: approximately **0.976**.
+- In a ~0.5 m IPM test, transformed distance differed from physical measurement by approximately **2-3 cm**.
+
+## Control & Safety
+
+The control layer publishes standard `geometry_msgs/Twist` commands:
+
+- `linear.x` - commanded linear velocity.
+- `angular.z` - commanded angular velocity.
+
+Three control approaches are investigated:
+
+| Controller | Purpose |
+|---|---|
+| **PD** | Lane-centering from lateral and heading errors |
+| **Backstepping-PD** | Model-based trajectory/error stabilization |
+| **Cascade PD** | Outer lane-following loop + inner velocity feedback loop |
+
+Safety logic applies velocity/angular-rate limits, command smoothing and LiDAR-based slowdown/stop before publishing `/cmd_vel`. Experiments cover straight roads, curves, intersections and stop-line scenarios.
+
+## Hardware & Software
+
+| Layer | Components |
+|---|---|
+| High-level compute | Raspberry Pi 5 |
+| Low-level controller | ESP32-S3 + micro-ROS |
+| Vision | PTZ camera, OpenCV, YOLO26n-seg, NCNN |
+| Range sensing | TOF/MS200 LiDAR |
+| Motion feedback | IMU, encoders, odometry |
+| Robot drive | 4-wheel skid-steer platform |
+| Middleware | ROS 2 Humble, DDS, micro-ROS |
+| Deployment | Docker / Docker Compose |
+| Simulation | MATLAB / Simulink |
+| Monitoring | Web dashboard + ROS 2 logging |
+
+### Main ROS 2 topics
 
 ```text
-main-lane
-other-lane
-turn-lane
-solid-white
-solid-yellow
-dashed-white
-dashed-yellow
-stop-line
-parking-slot
-vehicle
+/camera/image_raw
+/camera/image_raw/compressed
+/avs/telemetry
+/avs/telemetry_realworld
+/avs/control_error
+/avs/lane_target
+/scan
+/odom_raw
+/imu
+/cmd_vel
+/avs/control_state
+/avs/control_log
 ```
 
-The vision pipeline uses:
+## Test Environment
 
-* OpenCV preprocessing
-* NCNN neural-network inference
-* segmentation masks
-* lane extraction
-* bird's-eye / IPM transformation
-* navigation error estimation
+The robot is evaluated on a repeatable miniature urban environment containing straights, curves, intersections, lane markings, stop lines and parking areas.
 
----
+<p align="center">
+<img src="docs/images/miniature_testbed.png" alt="Miniature urban testbed layout" width="820" />
+</p>
 
-## 🧩 ROS 2 Packages
+Intersection perception was also verified through the live dashboard:
+
+<p align="center">
+<img src="docs/images/intersection_dashboard.png" alt="Intersection perception dashboard" width="820" />
+</p>
+
+## Repository Structure
 
 ```text
 ros2_ws/src/
-├── avs_perception
-├── avs_controlsystem
-├── avs_cascadecontrol
-├── avs_hybridcontrol
-├── avs_pdbackstepingcontrol
-└── yahboomcar_description
+├── avs_perception/
+├── avs_controlsystem/
+├── avs_cascadecontrol/
+├── avs_hybridcontrol/
+├── avs_pdbackstepingcontrol/
+└── yahboomcar_description/
+
+docker/
+web_dashboard/
+config/
+models/
+docker-compose.yml
 ```
 
-Main perception executables:
+## Quick Start
 
-```text
-video_publisher_node
-ncnn_inference_node
-ipm_transform_node
-control_node
-video_test_node
-```
-
----
-
-## 🎛️ Control Algorithms
-
-The project includes multiple experimental autonomous-control approaches:
-
-* Cascade Control
-* Hybrid Control
-* PD / Backstepping Control
-* General control-system implementation
-
-These controllers can be evaluated using the same perception pipeline.
-
----
-
-## 🛠️ Tech Stack
-
-| Area            | Technology       |
-| --------------- | ---------------- |
-| Robotics        | ROS 2 Humble     |
-| Computer Vision | OpenCV           |
-| AI Inference    | NCNN             |
-| Languages       | C++17, Python    |
-| Edge Computer   | Raspberry Pi 5   |
-| Embedded        | ESP32, micro-ROS |
-| Deployment      | Docker           |
-| Build           | CMake, Colcon    |
-
----
-
-## 🚀 Quick Start
-
-Clone the repository:
+### Docker
 
 ```bash
 git clone https://github.com/chanhuynguyen-ai/ROS-2-Micro-ROS-autonomous-robot-with-integrated-computer-vision.git
 cd ROS-2-Micro-ROS-autonomous-robot-with-integrated-computer-vision
+
+docker compose build
+docker compose up
 ```
 
-### Build with ROS 2
+### Native ROS 2 build
+
+Ubuntu 22.04 + ROS 2 Humble, OpenCV and NCNN are required.
 
 ```bash
 source /opt/ros/humble/setup.bash
 cd ros2_ws
 
-colcon build \
-  --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release
-
+rosdep install --from-paths src --ignore-src -r -y --rosdistro humble
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash
 ```
 
-### Run perception nodes
+Inspect the perception executables:
 
 ```bash
-ros2 run avs_perception video_publisher_node
-ros2 run avs_perception ncnn_inference_node
-ros2 run avs_perception ipm_transform_node
-ros2 run avs_perception control_node
+ros2 pkg executables avs_perception
 ```
 
----
+## Current Status
 
-## 🐳 Docker
+- [x] ROS 2 / micro-ROS modular system architecture
+- [x] Camera and video acquisition
+- [x] YOLO26n-seg inference with NCNN
+- [x] Segmentation post-processing and telemetry
+- [x] Homography/IPM world-coordinate conversion
+- [x] Centerline, waypoint and geometric-error extraction
+- [x] PD, Backstepping-PD and Cascade PD evaluation
+- [x] LiDAR safety layer
+- [x] Dashboard and experiment logging
+- [x] MATLAB/Simulink simulation and real-robot testing
+- [ ] Improve Raspberry Pi 5 Vision FPS and latency
+- [ ] Improve temporal smoothing and wheel-speed feedback
+- [ ] Extend behavior logic: turning, parking, lane change and route planning
 
-```bash
-docker compose build
-docker compose up
-```
+## Team
 
----
+**HUTECH - Institute of Engineering, Robotics & Artificial Intelligence**  
+Graduation Project, 2025-2026
 
-## 📈 Project Status
-
-| Module                        | Status         |
-| ----------------------------- | -------------- |
-| ROS 2 architecture            | ✅              |
-| Camera pipeline               | ✅              |
-| NCNN inference                | ✅              |
-| IPM                           | ✅              |
-| Control algorithms            | ✅ Experimental |
-| Docker environment            | ✅              |
-| Raspberry Pi optimization     | 🚧             |
-| micro-ROS / ESP32 integration | 🚧             |
-| Full hardware autonomous demo | 📌 Planned     |
-
----
-
-## 🗺️ Roadmap
-
-* [x] ROS 2 perception pipeline
-* [x] NCNN integration
-* [x] Lane / road segmentation
-* [x] IPM processing
-* [x] Multiple control algorithms
-* [ ] Finalize production controller
-* [ ] Complete micro-ROS integration
-* [ ] Benchmark Raspberry Pi 5 performance
-* [ ] Add complete autonomous-driving demo
-* [ ] Add automated ROS 2 tests
-
----
-
-## 🎯 Engineering Focus
-
-This project demonstrates the integration of:
-
-**Computer Vision + Edge AI + ROS 2 + Control Systems + Embedded Robotics**
-
-rather than treating each subsystem independently.
-
-The long-term objective is a practical autonomous robot capable of processing visual information and converting it into real-time physical motion.
-
----
-
-## 👨‍💻 Author
-
-**Nguyen Chan Huy**
-
-Robotics & Artificial Intelligence Engineering
-
-Focus:
-
-`Computer Vision` · `AI Engineering` · `ROS 2` · `Autonomous Robotics`
-
-GitHub: [@chanhuynguyen-ai](https://github.com/chanhuynguyen-ai)
+- **Nguyen Van Dat**
+- **Huynh Long**
+- **Nguyen Chan Huy**
+- **Supervisor:** Dr. Pham Quoc Thien
 
 ---
 
 <div align="center">
 
-### ⭐ If you find this project useful, consider giving it a star.
-
-**ROS 2 · Computer Vision · Edge AI · Autonomous Robotics**
+**ROS 2 · Computer Vision · Edge AI · Control Systems · Embedded Robotics**
 
 </div>
