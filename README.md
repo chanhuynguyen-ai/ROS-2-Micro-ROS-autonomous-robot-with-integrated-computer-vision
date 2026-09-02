@@ -211,36 +211,3 @@ Inspect the perception executables:
 ros2 pkg executables avs_perception
 ```
 
-## Current Status
-
-- [x] ROS 2 / micro-ROS modular system architecture
-- [x] Camera and video acquisition
-- [x] YOLO26n-seg inference with NCNN
-- [x] Segmentation post-processing and telemetry
-- [x] Homography/IPM world-coordinate conversion
-- [x] Centerline, waypoint and geometric-error extraction
-- [x] PD, Backstepping-PD and Cascade PD evaluation
-- [x] LiDAR safety layer
-- [x] Dashboard and experiment logging
-- [x] MATLAB/Simulink simulation and real-robot testing
-- [ ] Improve Raspberry Pi 5 Vision FPS and latency
-- [ ] Improve temporal smoothing and wheel-speed feedback
-- [ ] Extend behavior logic: turning, parking, lane change and route planning
-
-## Team
-
-**HUTECH - Institute of Engineering, Robotics & Artificial Intelligence**  
-Graduation Project, 2025-2026
-
-- **Nguyen Van Dat**
-- **Huynh Long**
-- **Nguyen Chan Huy**
-- **Supervisor:** Dr. Pham Quoc Thien
-
----
-
-<div align="center">
-
-**ROS 2 · Computer Vision · Edge AI · Control Systems · Embedded Robotics**
-
-</div>
